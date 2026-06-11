@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+{% load healing_tags %}
+
+{% block titulo %}Médicos{% endblock %}
+{% block topbar_titulo %}Equipe Médica{% endblock %}
+{% block topbar_subtitulo %}Médicos cadastrados na clínica{% endblock %}
+
+{% block conteudo %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Equipe Médica</div>
+    <div class="page-subtitle">{{ medicos.count }} médico{{ medicos.count|pluralize }} cadastrado{{ medicos.count|pluralize }}</div>
+  </div>
+  {% if user.perfil == 'admin' %}
+  <a href="{% url 'criar_medico' %}" class="btn-primary">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+    Novo Médico
+  </a>
+  {% endif %}
+</div>
+
+<!-- Filtros -->
+<div class="glass-card" style="padding:16px 20px;margin-bottom:20px;">
+  <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+    <div class="search-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:rgba(100,116,139,0.5);flex-shrink:0;">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" name="busca" placeholder="Buscar por nome..." value="{{ busca }}">
+    </div>
+    <select name="especialidade" class="form-select" style="width:auto;">
+      <option value="">Todas as especialidades</option>
+      {% for val, label in especialidades %}
+      <option value="{{ val }}" {% if especialidade_selecionada == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn-secondary">Filtrar</button>
+    {% if busca or especialidade_selecionada %}<a href="{% url 'listar_medicos' %}" class="btn-secondary">Limpar</a>{% endif %}
+  </form>
+</div>
+
+<!-- Grid de Médicos -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
+  {% for medico in medicos %}
+  <div class="glass-card glass-card-cyan" style="padding:24px;">
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;">
+      {% if medico.foto %}
+      <img src="{{ medico.foto.url }}" alt="Foto" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:2px solid rgba(6,182,212,0.3);">
+      {% else %}
+      <div class="user-avatar" style="width:52px;height:52px;font-size:1.1rem;border-radius:12px;">
+        {{ medico.usuario.first_name|slice:":1"|upper }}{{ medico.usuario.last_name|slice:":1"|upper }}
+      </div>
+      {% endif %}
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;color:#e2e8f0;font-size:0.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          Dr(a). {{ medico.usuario.get_full_name }}
+        </div>
+        <div style="font-size:0.75rem;color:#67e8f9;margin-top:2px;">{{ medico.especialidade }}</div>
+        <div style="font-size:0.7rem;color:rgba(100,116,139,0.5);margin-top:2px;font-family:monospace;">{{ medico.crm }}</div>
+      </div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,0.05);padding-top:14px;">
+      <div style="font-size:0.72rem;color:rgba(100,116,139,0.5);margin-bottom:2px;">E-mail</div>
+      <div style="font-size:0.8rem;color:rgba(148,163,184,0.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ medico.usuario.email }}</div>
+    </div>
+    {% if user.perfil == 'admin' %}
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <a href="{% url 'editar_medico' medico.pk %}" class="btn-secondary" style="flex:1;justify-content:center;padding:8px;">Editar</a>
+      <form method="post" action="{% url 'excluir_medico' medico.pk %}" onsubmit="return confirm('Desativar este médico?')">
+        {% csrf_token %}
+        <button type="submit" class="btn-danger">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  {% empty %}
+  <div style="grid-column:1/-1;text-align:center;padding:48px;color:rgba(100,116,139,0.5);">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:0.3;">
+      <path d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><circle cx="12" cy="13" r="3"/>
+    </svg>
+    Nenhum médico encontrado
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

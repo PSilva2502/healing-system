@@ -1,0 +1,698 @@
+{% extends 'core/base.html' %}
+{% load healing_tags %}
+
+{% block titulo %}Painel Admin{% endblock %}
+{% block topbar_titulo %}Painel Administrativo{% endblock %}
+{% block topbar_subtitulo %}Visão geral do sistema{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   PAINEL ADMIN  –  Dia Clinic aesthetic
+   Navy hero · Coral ECG · Anti-gravity pills · Bento grid
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Hero clínico ─────────────────────────────────────────── */
+.hero-clinical {
+  display: grid;
+  grid-template-columns: 1fr 310px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 2px 40px rgba(0,0,0,0.55);
+  margin-bottom: 20px;
+  min-height: 210px;
+}
+
+/* Left: dark navy panel */
+.hero-left {
+  background: linear-gradient(135deg, #050818 0%, #0a1040 60%, #0c1550 100%);
+  padding: 30px 34px 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Dot grid texture */
+.hero-left::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.022) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+}
+
+/* Coral glow — top right */
+.hero-left::after {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,64,64,0.10) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* ── Hero badge ─────────────────────────────────────────── */
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.60rem;
+  font-weight: 700;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: #e84040;
+  margin-bottom: 12px;
+  position: relative; z-index: 1;
+}
+
+.hero-badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #e84040;
+  flex-shrink: 0;
+  animation: pulseDot 2s ease-in-out infinite;
+  color: #e84040;
+}
+
+/* ── Greeting ───────────────────────────────────────────── */
+.hero-greeting {
+  font-family: var(--font-display);
+  font-size: 2.10rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #eef2ff;
+  line-height: 1.12;
+  position: relative; z-index: 1;
+}
+.hero-dot { color: #e84040; }
+
+.hero-date {
+  font-size: 0.78rem;
+  color: rgba(180,195,230,0.60);
+  margin-top: 5px;
+  position: relative; z-index: 1;
+}
+
+/* ── ECG area ───────────────────────────────────────────── */
+.hero-ecg-container {
+  margin-top: auto;
+  position: relative; z-index: 1;
+}
+
+.ecg-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.60rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(232,64,64,0.50);
+  margin-bottom: 3px;
+}
+
+#ecgCanvas {
+  display: block;
+  width: 100%;
+  height: 64px;
+}
+
+/* ── Hero right: floating stat pills ───────────────────── */
+.hero-right {
+  background: #0b1030;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 11px;
+}
+
+.float-pill {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 15px;
+  border-radius: 13px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  animation: floatPill 3.8s ease-in-out infinite;
+  animation-delay: var(--fp-delay, 0s);
+  transition: border-color 0.22s ease, background 0.22s ease;
+  cursor: default;
+}
+.float-pill:hover {
+  border-color: rgba(232,64,64,0.30);
+  background: rgba(232,64,64,0.05);
+}
+
+.fp-icon {
+  width: 38px; height: 38px;
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.fp-icon.fp-coral   { background: rgba(232,64,64,0.13);   color: #e84040; }
+.fp-icon.fp-blue    { background: rgba(59,130,246,0.13);  color: #60a5fa; }
+.fp-icon.fp-emerald { background: rgba(0,229,160,0.10);   color: #00e5a0; }
+
+.fp-data { display: flex; flex-direction: column; gap: 2px; }
+
+.fp-value {
+  font-family: var(--font-mono);
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.fp-value.fp-coral   { color: #e84040; }
+.fp-value.fp-blue    { color: #60a5fa; }
+.fp-value.fp-emerald { color: #00e5a0; }
+
+.fp-label {
+  font-size: 0.68rem;
+  color: rgba(160,175,210,0.65);
+  font-weight: 500;
+}
+
+/* ── Stat cards grid ────────────────────────────────────── */
+.bento-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+@media (max-width: 1100px) { .bento-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  { .bento-stats { grid-template-columns: 1fr; } }
+
+/* ── Main bento ─────────────────────────────────────────── */
+.bento-main {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 16px;
+}
+@media (max-width: 960px) { .bento-main { grid-template-columns: 1fr; } }
+
+/* ── Consultation rows ──────────────────────────────────── */
+.consult-row {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.14s ease;
+  cursor: default;
+}
+.consult-row:last-child { border-bottom: none; }
+.consult-row:hover { background: rgba(232,64,64,0.03); }
+
+.consult-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Quick action buttons ───────────────────────────────── */
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--border-card);
+  background: var(--bg-btn-sec);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  width: 100%;
+}
+.action-btn:hover {
+  transform: translateX(3px);
+  border-color: rgba(232,64,64,0.30);
+  color: #e84040;
+  background: rgba(232,64,64,0.06);
+}
+.action-btn .action-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: rgba(232,64,64,0.10);
+  color: #e84040;
+  transition: background 0.2s ease;
+}
+.action-btn:hover .action-icon { background: rgba(232,64,64,0.18); }
+
+.action-btn.blue .action-icon { background: var(--c-blue-s); color: var(--c-blue); }
+.action-btn.blue:hover { border-color: rgba(59,130,246,0.28); color: var(--c-blue); background: var(--c-blue-s); }
+
+.action-btn.amber .action-icon { background: var(--c-amber-s); color: var(--c-amber); }
+.action-btn.amber:hover { border-color: rgba(245,158,11,0.28); color: var(--c-amber); background: var(--c-amber-s); }
+
+/* Chevron arrow */
+.action-chevron { margin-left: auto; opacity: 0.35; transition: opacity 0.2s, transform 0.2s; }
+.action-btn:hover .action-chevron { opacity: 0.7; transform: translateX(2px); }
+
+/* ── Responsive hero collapse ───────────────────────────── */
+@media (max-width: 860px) {
+  .hero-clinical { grid-template-columns: 1fr; }
+  .hero-right {
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .float-pill { flex: 1; min-width: 140px; }
+}
+</style>
+{% endblock %}
+
+{% block conteudo %}
+
+<!-- ═══ HERO CLÍNICO ════════════════════════════════════════════ -->
+<div class="hero-clinical">
+
+  <!-- ── Painel esquerdo: saudação + ECG ────────────────────── -->
+  <div class="hero-left">
+
+    <div style="position:relative;z-index:1;">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Sistema HEALING · Admin
+      </div>
+
+      <h1 class="hero-greeting">
+        Bom dia, {{ user.first_name }}<span class="hero-dot">.</span>
+      </h1>
+
+      <p class="hero-date">{% now "l, d \d\e N \d\e Y" %}</p>
+    </div>
+
+    <!-- ECG animado -->
+    <div class="hero-ecg-container">
+      <div class="ecg-header">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        <span>ECG · Monitoramento Clínico</span>
+      </div>
+      <canvas id="ecgCanvas"></canvas>
+    </div>
+
+  </div>
+
+  <!-- ── Painel direito: pills anti-gravity ─────────────────── -->
+  <div class="hero-right">
+
+    <!-- Consultas hoje -->
+    <div class="float-pill" style="--fp-delay: 0s;">
+      <div class="fp-icon fp-coral">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <div class="fp-data">
+        <span class="fp-value fp-coral" data-count="{{ consultas_hoje }}">{{ consultas_hoje }}</span>
+        <span class="fp-label">Consultas Hoje</span>
+      </div>
+    </div>
+
+    <!-- Médicos -->
+    <div class="float-pill" style="--fp-delay: 0.9s;">
+      <div class="fp-icon fp-blue">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/>
+          <circle cx="12" cy="13" r="3"/>
+        </svg>
+      </div>
+      <div class="fp-data">
+        <span class="fp-value fp-blue" data-count="{{ total_medicos }}">{{ total_medicos }}</span>
+        <span class="fp-label">Médicos Ativos</span>
+      </div>
+    </div>
+
+    <!-- Pacientes -->
+    <div class="float-pill" style="--fp-delay: 1.8s;">
+      <div class="fp-icon fp-emerald">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div class="fp-data">
+        <span class="fp-value fp-emerald" data-count="{{ total_pacientes }}">{{ total_pacientes }}</span>
+        <span class="fp-label">Pacientes</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+<!-- /hero-clinical -->
+
+
+<!-- ═══ STAT CARDS ══════════════════════════════════════════════ -->
+<div class="bento-stats">
+
+  <div class="stat-card purple">
+    <div class="stat-icon purple">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    </div>
+    <div class="stat-value"><span data-count="{{ total_consultas }}">{{ total_consultas }}</span></div>
+    <div class="stat-label">Total de Consultas</div>
+  </div>
+
+  <div class="stat-card cyan">
+    <div class="stat-icon cyan">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+    </div>
+    <div class="stat-value" style="color:var(--c-blue);"><span data-count="{{ total_pacientes }}">{{ total_pacientes }}</span></div>
+    <div class="stat-label">Pacientes Cadastrados</div>
+  </div>
+
+  <div class="stat-card green">
+    <div class="stat-icon green">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/>
+        <circle cx="12" cy="13" r="3"/>
+      </svg>
+    </div>
+    <div class="stat-value"><span data-count="{{ total_medicos }}">{{ total_medicos }}</span></div>
+    <div class="stat-label">Médicos Ativos</div>
+  </div>
+
+  <div class="stat-card amber">
+    <div class="stat-icon amber">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+    </div>
+    <div class="stat-value" style="color:var(--c-amber);"><span data-count="{{ consultas_hoje }}">{{ consultas_hoje }}</span></div>
+    <div class="stat-label">Consultas Hoje</div>
+    <div style="position:absolute;top:18px;right:18px;display:flex;align-items:center;gap:5px;">
+      <span class="pulse-dot" style="color:var(--c-amber);">
+        <span style="display:block;width:7px;height:7px;border-radius:50%;background:var(--c-amber);"></span>
+      </span>
+      <span style="font-size:0.60rem;font-weight:700;letter-spacing:0.08em;color:var(--c-amber);opacity:0.7;">HOJE</span>
+    </div>
+  </div>
+
+</div>
+<!-- /bento-stats -->
+
+
+<!-- ═══ BENTO MAIN ═══════════════════════════════════════════════ -->
+<div class="bento-main">
+
+  <!-- ── Últimas Consultas ──────────────────────────────────── -->
+  <div class="glass-card no-tilt" style="overflow:hidden;padding:0;">
+
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:28px;height:28px;border-radius:8px;background:rgba(232,64,64,0.10);border:1px solid rgba(232,64,64,0.22);display:flex;align-items:center;justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e84040" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <span style="font-family:var(--font-display);font-size:0.88rem;font-weight:700;color:var(--text-primary);">Últimas Consultas</span>
+      </div>
+      <a href="{% url 'listar_consultas' %}" style="font-size:0.72rem;color:#e84040;text-decoration:none;font-weight:600;letter-spacing:0.02em;">
+        Ver todas →
+      </a>
+    </div>
+
+    <div>
+      {% if ultimas_consultas %}
+        {% for consulta in ultimas_consultas %}
+        <div class="consult-row">
+          <div class="consult-dot" style="background:{% if consulta.status == 'agendada' %}var(--c-amber){% elif consulta.status == 'realizada' %}var(--accent){% else %}#e84040{% endif %};"></div>
+          <div style="min-width:0;">
+            <div style="font-size:0.82rem;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              {{ consulta.paciente.nome_completo }}
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:1px;">
+              Dr(a). {{ consulta.medico.usuario.get_full_name }}
+              <span style="opacity:0.4;margin:0 4px;">·</span>
+              {{ consulta.data_consulta|date:"d/m/Y" }}
+              <span style="opacity:0.4;margin:0 4px;">·</span>
+              {{ consulta.horario }}
+            </div>
+          </div>
+          <span class="badge {{ consulta.status|status_badge_cor }}">{{ consulta.get_status_display }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="padding:44px 20px;text-align:center;color:var(--text-faint);font-size:0.82rem;">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:0.35;">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Nenhuma consulta registrada ainda
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+  <!-- /consultas -->
+
+  <!-- ── Coluna direita ──────────────────────────────────────── -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Ações Rápidas -->
+    <div class="glass-card no-tilt" style="padding:18px 18px 16px;">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
+        <div style="width:28px;height:28px;border-radius:8px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.22);display:flex;align-items:center;justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-blue)" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+        </div>
+        <span style="font-family:var(--font-display);font-size:0.88rem;font-weight:700;color:var(--text-primary);">Ações Rápidas</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:7px;">
+
+        <a href="{% url 'criar_paciente' %}" class="action-btn">
+          <div class="action-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+          </div>
+          <span>Cadastrar Paciente</span>
+          <svg class="action-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </a>
+
+        <a href="{% url 'criar_medico' %}" class="action-btn blue">
+          <div class="action-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/>
+              <circle cx="12" cy="13" r="3"/>
+            </svg>
+          </div>
+          <span>Cadastrar Médico</span>
+          <svg class="action-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </a>
+
+        <a href="{% url 'agendar_consulta' %}" class="action-btn">
+          <div class="action-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <span>Agendar Consulta</span>
+          <svg class="action-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </a>
+
+        <a href="{% url 'relatorios' %}" class="action-btn amber">
+          <div class="action-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </div>
+          <span>Ver Relatórios</span>
+          <svg class="action-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </a>
+
+        <a href="{% url 'auditoria' %}" class="action-btn" style="border-color:rgba(232,64,64,0.18);">
+          <div class="action-icon" style="background:rgba(232,64,64,0.10);color:#e84040;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <span>Auditoria LGPD</span>
+          <svg class="action-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </a>
+
+      </div>
+    </div>
+    <!-- /ações -->
+
+    <!-- Status do sistema -->
+    <div class="glass-card no-tilt" style="padding:16px 18px;">
+      <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-faint);margin-bottom:12px;">
+        Status do Sistema
+      </div>
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:0.78rem;color:var(--text-muted);">Banco de dados</span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:0.72rem;font-weight:600;color:var(--accent);">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;"></span>
+            Online
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:0.78rem;color:var(--text-muted);">Registro de auditoria</span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:0.72rem;font-weight:600;color:var(--accent);">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;"></span>
+            Ativo
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:0.78rem;color:var(--text-muted);">Proteção LGPD</span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:0.72rem;font-weight:600;color:var(--accent);">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;"></span>
+            Conforme
+          </span>
+        </div>
+        <div style="height:1px;background:var(--border-subtle);margin:3px 0;"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:0.78rem;color:var(--text-muted);">Usuários cadastrados</span>
+          <span style="font-family:var(--font-mono);font-size:0.78rem;font-weight:700;color:var(--text-primary);">{{ total_pacientes|add:total_medicos }}</span>
+        </div>
+      </div>
+    </div>
+    <!-- /status -->
+
+  </div><!-- /coluna direita -->
+</div><!-- /bento-main -->
+
+
+<!-- ═══ ECG CANVAS SCRIPT ════════════════════════════════════════ -->
+<script>
+(function initECG() {
+  const canvas = document.getElementById('ecgCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, raf, paused = false, cursor = 0;
+
+  function setSize() {
+    W = canvas.width  = canvas.offsetWidth  || canvas.parentElement.offsetWidth;
+    H = canvas.height = canvas.offsetHeight || 64;
+  }
+  setSize();
+  window.addEventListener('resize', () => { setSize(); cursor = 0; });
+
+  /* ECG waveform: [normX 0‥1, normY −1‥1] */
+  const WAVE = [
+    [0.00,  0.00], [0.07,  0.00],
+    [0.11, -0.08], [0.14,  0.22],
+    [0.18, -0.50], [0.22,  0.16],
+    [0.26,  0.00],
+    [0.40,  0.00], [0.44, -0.05], [0.49,  0.09], [0.53,  0.00],
+    [1.00,  0.00]
+  ];
+
+  function sampleY(t) {
+    t = ((t % 1) + 1) % 1;
+    for (let i = 0; i < WAVE.length - 1; i++) {
+      if (t >= WAVE[i][0] && t < WAVE[i+1][0]) {
+        const u = (t - WAVE[i][0]) / (WAVE[i+1][0] - WAVE[i][0]);
+        return WAVE[i][1] + u * (WAVE[i+1][1] - WAVE[i][1]);
+      }
+    }
+    return 0;
+  }
+
+  const COLOR  = '#e84040';
+  const CYCLE  = 0.46;   /* one ECG beat = 46% of canvas width */
+  const SPEED  = 2.4;    /* px per frame */
+
+  function frame() {
+    if (paused) return;
+    ctx.clearRect(0, 0, W, H);
+
+    const mid   = H * 0.52;
+    const amp   = H * 0.34;
+    const cycle = W * CYCLE;
+    const limit = Math.min(cursor, W);
+
+    /* ── Draw ECG line ── */
+    ctx.save();
+    ctx.strokeStyle = COLOR;
+    ctx.lineWidth   = 1.8;
+    ctx.lineJoin    = 'round';
+    ctx.shadowColor = COLOR;
+    ctx.shadowBlur  = 9;
+    ctx.beginPath();
+    for (let x = 0; x <= limit; x++) {
+      const y = mid - sampleY(x / cycle) * amp;
+      x === 0 ? ctx.moveTo(0, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    /* ── Glowing tip dot ── */
+    if (cursor > 0 && cursor <= W + 4) {
+      const tx = Math.min(cursor, W - 1);
+      const ty = mid - sampleY(tx / cycle) * amp;
+      ctx.save();
+      ctx.fillStyle   = COLOR;
+      ctx.shadowColor = COLOR;
+      ctx.shadowBlur  = 20;
+      ctx.beginPath();
+      ctx.arc(tx, ty, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    cursor += SPEED;
+
+    if (cursor > W + 20) {
+      paused = true;
+      setTimeout(() => { cursor = 0; paused = false; raf = requestAnimationFrame(frame); }, 520);
+      return;
+    }
+    raf = requestAnimationFrame(frame);
+  }
+
+  raf = requestAnimationFrame(frame);
+})();
+</script>
+
+{% endblock %}

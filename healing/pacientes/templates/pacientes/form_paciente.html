@@ -1,0 +1,82 @@
+{% extends 'core/base.html' %}
+
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block topbar_titulo %}{{ titulo }}{% endblock %}
+{% block topbar_subtitulo %}Gestão de Pacientes{% endblock %}
+
+{% block conteudo %}
+<div style="max-width:600px;margin:0 auto;">
+  <div class="page-header">
+    <div class="page-title">{{ titulo }}</div>
+    <a href="{% url 'listar_pacientes' %}" class="btn-secondary">← Voltar</a>
+  </div>
+
+  <div class="glass-card" style="padding:32px;">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <!-- Dados do Paciente -->
+      <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(100,116,139,0.6);margin-bottom:16px;">
+        Dados Pessoais
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">Nome</label>
+          <input type="text" name="nome" class="form-input" value="{{ form.nome.value|default:'' }}" placeholder="Nome">
+          {% if form.nome.errors %}<div class="form-error">{{ form.nome.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sobrenome</label>
+          <input type="text" name="sobrenome" class="form-input" value="{{ form.sobrenome.value|default:'' }}" placeholder="Sobrenome">
+          {% if form.sobrenome.errors %}<div class="form-error">{{ form.sobrenome.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">E-mail <span style="font-weight:400;color:rgba(100,116,139,0.5);">(opcional)</span></label>
+        <input type="email" name="email" class="form-input" value="{{ form.email.value|default:'' }}" placeholder="paciente@email.com">
+        {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(100,116,139,0.6);margin:24px 0 16px;">
+        Dados Clínicos
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">CPF</label>
+        <input type="text" name="cpf" class="form-input" value="{{ form.cpf.value|default:'' }}" placeholder="00000000000" maxlength="11">
+        <div style="font-size:0.72rem;color:rgba(100,116,139,0.5);margin-top:4px;">Somente números, sem pontuação</div>
+        {% if form.cpf.errors %}<div class="form-error">{{ form.cpf.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input type="text" name="telefone" class="form-input" value="{{ form.telefone.value|default:'' }}" placeholder="(00) 00000-0000">
+          {% if form.telefone.errors %}<div class="form-error">{{ form.telefone.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data de Nascimento</label>
+          <input type="date" name="data_nascimento" class="form-input" value="{{ form.data_nascimento.value|default:'' }}">
+          {% if form.data_nascimento.errors %}<div class="form-error">{{ form.data_nascimento.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+
+      {% if form.non_field_errors %}
+      <div class="form-error" style="margin-bottom:16px;">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
+
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
+        <a href="{% url 'listar_pacientes' %}" class="btn-secondary">Cancelar</a>
+        <button type="submit" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Salvar Paciente
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'core/base.html' %}
+{% load healing_tags %}
+
+{% block titulo %}Consultas{% endblock %}
+{% block topbar_titulo %}Gestão de Consultas{% endblock %}
+{% block topbar_subtitulo %}Agendamentos e atendimentos{% endblock %}
+
+{% block conteudo %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Consultas</div>
+    <div class="page-subtitle">{{ consultas.count }} resultado{{ consultas.count|pluralize }}</div>
+  </div>
+  <a href="{% url 'agendar_consulta' %}" class="btn-primary">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+    Nova Consulta
+  </a>
+</div>
+
+<!-- Filtros -->
+<div class="glass-card" style="padding:16px 20px;margin-bottom:20px;">
+  <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+    <select name="status" class="form-select" style="width:auto;">
+      <option value="">Todos os status</option>
+      <option value="agendada" {% if status_filtro == 'agendada' %}selected{% endif %}>Agendadas</option>
+      <option value="realizada" {% if status_filtro == 'realizada' %}selected{% endif %}>Realizadas</option>
+      <option value="cancelada" {% if status_filtro == 'cancelada' %}selected{% endif %}>Canceladas</option>
+    </select>
+    <input type="date" name="data" class="form-input" style="width:180px;" value="{{ data_filtro }}" title="Filtrar por data">
+    <button type="submit" class="btn-secondary">Filtrar</button>
+    {% if status_filtro or data_filtro %}
+    <a href="{% url 'listar_consultas' %}" class="btn-secondary">Limpar</a>
+    {% endif %}
+  </form>
+</div>
+
+<div class="glass-card" style="overflow:hidden;">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Data / Hora</th>
+        <th>Paciente</th>
+        <th>Médico</th>
+        <th>Especialidade</th>
+        <th>Status</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for consulta in consultas %}
+      <tr {% if consulta.data_consulta == hoje and consulta.status == 'agendada' %}style="background:rgba(6,182,212,0.04);"{% endif %}>
+        <td>
+          <div style="font-weight:700;color:#e2e8f0;font-variant-numeric:tabular-nums;">
+            {{ consulta.data_consulta|date:"d/m/Y" }}
+          </div>
+          <div style="font-size:0.75rem;color:rgba(100,116,139,0.6);">{{ consulta.horario|time:"H:i" }}</div>
+          {% if consulta.data_consulta == hoje %}
+          <span style="font-size:0.65rem;color:#67e8f9;font-weight:600;letter-spacing:0.05em;">HOJE</span>
+          {% endif %}
+        </td>
+        <td>
+          <div style="font-weight:600;color:#cbd5e1;">{{ consulta.paciente.nome_completo }}</div>
+        </td>
+        <td>
+          <div style="font-weight:600;color:#cbd5e1;">Dr(a). {{ consulta.medico.usuario.get_full_name }}</div>
+        </td>
+        <td style="color:rgba(148,163,184,0.6);font-size:0.82rem;">{{ consulta.medico.especialidade }}</td>
+        <td><span class="badge {{ consulta.status|status_badge_cor }}">{{ consulta.get_status_display }}</span></td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            {% if consulta.status == 'agendada' %}
+              {% if user.perfil == 'medico' or user.perfil == 'admin' or user.perfil == 'recepcionista' %}
+              <a href="{% url 'registrar_atendimento' consulta.pk %}" class="btn-green">Atender</a>
+              {% endif %}
+              <form method="post" action="{% url 'cancelar_consulta' consulta.pk %}" style="display:inline;" onsubmit="return confirm('Cancelar esta consulta?')">
+                {% csrf_token %}
+                <button type="submit" class="btn-danger">Cancelar</button>
+              </form>
+            {% elif consulta.status == 'realizada' and consulta.atendimento %}
+              <button class="btn-secondary" style="padding:6px 10px;font-size:0.72rem;cursor:default;">Realizada</button>
+            {% else %}
+              <span style="font-size:0.75rem;color:rgba(100,116,139,0.4);">—</span>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" style="text-align:center;padding:48px;color:rgba(100,116,139,0.5);">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:0.3;">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Nenhuma consulta encontrada
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

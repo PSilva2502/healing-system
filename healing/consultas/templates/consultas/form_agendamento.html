@@ -1,0 +1,94 @@
+{% extends 'core/base.html' %}
+
+{% block titulo %}Agendar Consulta{% endblock %}
+{% block topbar_titulo %}Agendamento de Consulta{% endblock %}
+{% block topbar_subtitulo %}Selecione médico, data e horário{% endblock %}
+
+{% block conteudo %}
+<div style="max-width:600px;margin:0 auto;">
+  <div class="page-header">
+    <div class="page-title">Nova Consulta</div>
+    <a href="{% url 'listar_consultas' %}" class="btn-secondary">← Voltar</a>
+  </div>
+
+  <div class="glass-card" style="padding:32px;">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% if user.perfil == 'admin' or user.perfil == 'recepcionista' %}
+      <div class="form-group">
+        <label class="form-label">Paciente</label>
+        <select name="paciente" class="form-select">
+          <option value="">Selecione um paciente</option>
+          {% for p in form.fields.paciente.queryset %}
+          <option value="{{ p.pk }}" {% if form.paciente.value == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.nome_completo }}</option>
+          {% endfor %}
+        </select>
+        {% if form.paciente.errors %}<div class="form-error">{{ form.paciente.errors.0 }}</div>{% endif %}
+      </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label">Médico</label>
+        <select name="medico" class="form-select" id="id_medico">
+          <option value="">Selecione um médico</option>
+          {% for m in form.fields.medico.queryset %}
+          <option value="{{ m.pk }}" {% if form.medico.value == m.pk|stringformat:"s" %}selected{% endif %}>
+            Dr(a). {{ m.usuario.get_full_name }} — {{ m.especialidade }}
+          </option>
+          {% endfor %}
+        </select>
+        {% if form.medico.errors %}<div class="form-error">{{ form.medico.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">Data da Consulta</label>
+          <input type="date" name="data_consulta" class="form-input"
+                 value="{{ form.data_consulta.value|default:'' }}"
+                 min="{% now 'Y-m-d' %}">
+          {% if form.data_consulta.errors %}<div class="form-error">{{ form.data_consulta.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Horário</label>
+          <select name="horario" class="form-select">
+            {% for val, label in form.fields.horario.choices %}
+            <option value="{{ val }}" {% if form.horario.value == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          {% if form.horario.errors %}<div class="form-error">{{ form.horario.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea name="observacoes" class="form-textarea" rows="3" placeholder="Motivo da consulta, queixas...">{{ form.observacoes.value|default:'' }}</textarea>
+      </div>
+
+      {% if form.non_field_errors %}
+      <div class="alert alert-error">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
+
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
+        <a href="{% url 'listar_consultas' %}" class="btn-secondary">Cancelar</a>
+        <button type="submit" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Confirmar Agendamento
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Info Box -->
+  <div style="margin-top:16px;padding:16px 20px;border-radius:12px;background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.15);">
+    <div style="font-size:0.78rem;color:#67e8f9;font-weight:600;margin-bottom:6px;">Informações</div>
+    <ul style="font-size:0.78rem;color:rgba(148,163,184,0.7);padding-left:16px;line-height:1.7;">
+      <li>Não é possível agendar para datas passadas</li>
+      <li>Cada médico só pode ter uma consulta por horário</li>
+      <li>Horários disponíveis: 08h às 12h e 13h às 17h30</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'core/base.html' %}
+{% load healing_tags %}
+
+{% block titulo %}Auditoria LGPD{% endblock %}
+{% block topbar_titulo %}Log de Auditoria{% endblock %}
+{% block topbar_subtitulo %}Rastreabilidade de operações — LGPD{% endblock %}
+
+{% block conteudo %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Auditoria LGPD</div>
+    <div class="page-subtitle">{{ registros.count }} registro{{ registros.count|pluralize }} exibido{{ registros.count|pluralize }} (máx. 100)</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" stroke-width="2">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    <span style="font-size:0.78rem;color:#6ee7b7;font-weight:600;">Acesso Restrito — Admin</span>
+  </div>
+</div>
+
+<!-- Filtros -->
+<div class="glass-card" style="padding:16px 20px;margin-bottom:20px;">
+  <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+    <select name="tabela" class="form-select" style="width:auto;">
+      <option value="">Todas as tabelas</option>
+      {% for tabela in tabelas %}
+      <option value="{{ tabela }}" {% if tabela_filtro == tabela %}selected{% endif %}>{{ tabela }}</option>
+      {% endfor %}
+    </select>
+    <select name="operacao" class="form-select" style="width:auto;">
+      <option value="">Todas as operações</option>
+      <option value="INSERT" {% if operacao_filtro == 'INSERT' %}selected{% endif %}>INSERT</option>
+      <option value="UPDATE" {% if operacao_filtro == 'UPDATE' %}selected{% endif %}>UPDATE</option>
+      <option value="DELETE" {% if operacao_filtro == 'DELETE' %}selected{% endif %}>DELETE</option>
+    </select>
+    <button type="submit" class="btn-secondary">Filtrar</button>
+    {% if tabela_filtro or operacao_filtro %}<a href="{% url 'auditoria' %}" class="btn-secondary">Limpar</a>{% endif %}
+  </form>
+</div>
+
+<div class="glass-card" style="overflow:hidden;">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Data/Hora</th>
+        <th>Usuário</th>
+        <th>Tabela</th>
+        <th>Operação</th>
+        <th>Dados Anteriores</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for reg in registros %}
+      <tr>
+        <td>
+          <div style="font-size:0.82rem;font-variant-numeric:tabular-nums;color:#e2e8f0;">{{ reg.executado_em|date:"d/m/Y" }}</div>
+          <div style="font-size:0.72rem;color:rgba(100,116,139,0.5);">{{ reg.executado_em|time:"H:i:s" }}</div>
+        </td>
+        <td>
+          {% if reg.usuario %}
+          <div style="font-weight:600;font-size:0.85rem;color:#e2e8f0;">{{ reg.usuario.get_full_name }}</div>
+          <span class="badge {{ reg.usuario.perfil|perfil_badge_cor }}" style="font-size:0.62rem;">{{ reg.usuario.get_perfil_display }}</span>
+          {% else %}
+          <span style="color:rgba(100,116,139,0.4);font-size:0.82rem;">Sistema</span>
+          {% endif %}
+        </td>
+        <td>
+          <span style="font-family:monospace;font-size:0.82rem;color:#c4b5fd;background:rgba(124,58,237,0.1);padding:3px 8px;border-radius:6px;">{{ reg.tabela_afetada }}</span>
+        </td>
+        <td>
+          <span class="badge {% if reg.operacao == 'INSERT' %}text-emerald-300 bg-emerald-500/10 border-emerald-500/20{% elif reg.operacao == 'UPDATE' %}text-amber-300 bg-amber-500/10 border-amber-500/20{% else %}text-red-300 bg-red-500/10 border-red-500/20{% endif %}"
+                style="{% if reg.operacao == 'INSERT' %}color:#6ee7b7;background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.2);{% elif reg.operacao == 'UPDATE' %}color:#fde68a;background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);{% else %}color:#fca5a5;background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);{% endif %}">
+            {{ reg.operacao }}
+          </span>
+        </td>
+        <td>
+          {% if reg.dados_anteriores %}
+          <details>
+            <summary style="cursor:pointer;font-size:0.78rem;color:#67e8f9;">Ver dados</summary>
+            <pre style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border-radius:8px;font-size:0.72rem;color:rgba(148,163,184,0.8);overflow:auto;max-width:280px;">{{ reg.dados_anteriores }}</pre>
+          </details>
+          {% else %}
+          <span style="font-size:0.78rem;color:rgba(100,116,139,0.4);">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" style="text-align:center;padding:48px;color:rgba(100,116,139,0.5);">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:0.3;">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Nenhum registro de auditoria encontrado
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

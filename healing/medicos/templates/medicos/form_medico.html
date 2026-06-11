@@ -1,0 +1,87 @@
+{% extends 'core/base.html' %}
+
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block topbar_titulo %}{{ titulo }}{% endblock %}
+{% block topbar_subtitulo %}Gestão da Equipe Médica{% endblock %}
+
+{% block conteudo %}
+<div style="max-width:600px;margin:0 auto;">
+  <div class="page-header">
+    <div class="page-title">{{ titulo }}</div>
+    <a href="{% url 'listar_medicos' %}" class="btn-secondary">← Voltar</a>
+  </div>
+
+  <div class="glass-card" style="padding:32px;">
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      {% if not medico %}
+      <div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid rgba(255,255,255,0.06);">
+        <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(100,116,139,0.6);margin-bottom:16px;">
+          Dados de Acesso
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Nome</label>
+            <input type="text" name="first_name" class="form-input" value="{{ form.first_name.value|default:'' }}" placeholder="Nome">
+            {% if form.first_name.errors %}<div class="form-error">{{ form.first_name.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sobrenome</label>
+            <input type="text" name="last_name" class="form-input" value="{{ form.last_name.value|default:'' }}" placeholder="Sobrenome">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-mail</label>
+          <input type="email" name="email" class="form-input" value="{{ form.email.value|default:'' }}" placeholder="medico@clinica.com">
+          {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senha</label>
+          <input type="password" name="senha" class="form-input" placeholder="Mínimo 8 caracteres">
+        </div>
+      </div>
+      {% endif %}
+
+      <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(100,116,139,0.6);margin-bottom:16px;">
+        Dados Profissionais
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">CRM</label>
+          <input type="text" name="crm" class="form-input" value="{{ form.crm.value|default:'' }}" placeholder="CRM/BA 123456">
+          {% if form.crm.errors %}<div class="form-error">{{ form.crm.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Especialidade</label>
+          <select name="especialidade" class="form-select">
+            {% for val, label in form.fields.especialidade.choices %}
+            <option value="{{ val }}" {% if form.especialidade.value == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Foto (opcional)</label>
+        <input type="file" name="foto" class="form-input" accept="image/*">
+      </div>
+
+      {% if form.non_field_errors %}
+      <div class="form-error" style="margin-bottom:16px;">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
+
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
+        <a href="{% url 'listar_medicos' %}" class="btn-secondary">Cancelar</a>
+        <button type="submit" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Salvar Médico
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

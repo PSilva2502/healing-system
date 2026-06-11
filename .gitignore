@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual environments
+venv/
+healing/venv/
+env/
+.venv/
+
+# Django
+*.log
+db.sqlite3
+healing/db.sqlite3
+*.sqlite3
+media/
+healing/media/
+staticfiles/
+healing/staticfiles/
+
+# Environment / secrets
+.env
+.env.*
+*.env
+
+# Credenciais locais
+USUARIOS.md
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Migrations (manter estrutura mas pode comentar se quiser versionar)
+# healing/*/migrations/0*.py

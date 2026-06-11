@@ -1,0 +1,108 @@
+{% extends 'core/base.html' %}
+{% load healing_tags %}
+
+{% block titulo %}Pacientes{% endblock %}
+{% block topbar_titulo %}Gestão de Pacientes{% endblock %}
+{% block topbar_subtitulo %}Cadastros e informações dos pacientes{% endblock %}
+
+{% block conteudo %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Pacientes</div>
+    <div class="page-subtitle">{{ pacientes.count }} paciente{{ pacientes.count|pluralize }} encontrado{{ pacientes.count|pluralize }}</div>
+  </div>
+  {% if user.perfil == 'admin' or user.perfil == 'recepcionista' %}
+  <a href="{% url 'criar_paciente' %}" class="btn-primary">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+    Novo Paciente
+  </a>
+  {% endif %}
+</div>
+
+<!-- Busca -->
+<div class="glass-card" style="padding:16px 20px;margin-bottom:20px;">
+  <form method="get" style="display:flex;gap:12px;align-items:center;">
+    <div class="search-bar" style="flex:1;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:rgba(100,116,139,0.5);flex-shrink:0;">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" name="busca" placeholder="Buscar por nome ou CPF..." value="{{ busca }}">
+    </div>
+    <button type="submit" class="btn-secondary">Filtrar</button>
+    {% if busca %}<a href="{% url 'listar_pacientes' %}" class="btn-secondary">Limpar</a>{% endif %}
+  </form>
+</div>
+
+<div class="glass-card" style="overflow:hidden;">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Paciente</th><th>CPF</th><th>Telefone</th><th>Nascimento</th><th>Idade</th><th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for paciente in pacientes %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="user-avatar" style="width:34px;height:34px;font-size:0.75rem;background:linear-gradient(135deg,#0891b2,#22d3ee);">
+              {{ paciente.iniciais }}
+            </div>
+            <div>
+              <div style="font-weight:600;color:#e2e8f0;">{{ paciente.nome_completo }}</div>
+              <div style="font-size:0.72rem;color:rgba(100,116,139,0.6);">{{ paciente.email }}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span style="font-family:monospace;font-size:0.82rem;color:rgba(148,163,184,0.7);">
+            {{ paciente.cpf|mascarar_cpf }}
+          </span>
+        </td>
+        <td style="color:rgba(148,163,184,0.7);">{{ paciente.telefone }}</td>
+        <td style="color:rgba(148,163,184,0.7);">{{ paciente.data_nascimento|date:"d/m/Y" }}</td>
+        <td>
+          <span style="font-weight:600;color:#c4b5fd;">{{ paciente.idade }} anos</span>
+        </td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <a href="{% url 'detalhar_paciente' paciente.pk %}" class="btn-cyan">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </a>
+            {% if user.perfil == 'admin' or user.perfil == 'recepcionista' %}
+            <a href="{% url 'editar_paciente' paciente.pk %}" class="btn-secondary" style="padding:8px 12px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </a>
+            <form method="post" action="{% url 'excluir_paciente' paciente.pk %}" style="display:inline;" onsubmit="return confirm('Desativar este paciente?')">
+              {% csrf_token %}
+              <button type="submit" class="btn-danger" style="padding:8px 12px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" style="text-align:center;padding:48px;color:rgba(100,116,139,0.5);">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:0.3;">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          Nenhum paciente encontrado
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

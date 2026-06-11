@@ -1,0 +1,586 @@
+{% extends 'core/base.html' %}
+{% load healing_tags %}
+
+{% block titulo %}Registrar Atendimento{% endblock %}
+{% block topbar_titulo %}Registrar Atendimento{% endblock %}
+{% block topbar_subtitulo %}Prontuário da consulta{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   FORM ATENDIMENTO  –  Body Map + Clinical Record
+   ═══════════════════════════════════════════════════════════ */
+
+.atend-wrap { max-width: 920px; margin: 0 auto; }
+
+/* ── Body-map card ──────────────────────────────────────── */
+.bodymap-card {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 0;
+  overflow: hidden;
+}
+@media (max-width: 700px) {
+  .bodymap-card { grid-template-columns: 1fr; }
+}
+
+/* Left: SVG panel */
+.bodymap-svg-panel {
+  background: #050818;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 16px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.bodymap-svg-label {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(232,64,64,0.55);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* The SVG body */
+#bodySvg {
+  width: 176px;
+  height: auto;
+  display: block;
+  user-select: none;
+}
+
+/* Scan line animation */
+.scan-line {
+  animation: bodyScan 4.5s linear infinite;
+  transform-origin: center top;
+}
+@keyframes bodyScan {
+  0%   { transform: translateY(-10px); opacity: 0; }
+  5%   { opacity: 0.7; }
+  92%  { opacity: 0.5; }
+  100% { transform: translateY(500px); opacity: 0; }
+}
+
+/* Zone default state */
+.bz {
+  fill: transparent;
+  cursor: pointer;
+  transition: fill 0.18s ease, filter 0.18s ease;
+}
+.bz:hover {
+  fill: rgba(232,64,64,0.18);
+}
+.bz.selected {
+  fill: rgba(232,64,64,0.28);
+  filter: drop-shadow(0 0 5px rgba(232,64,64,0.60));
+}
+
+/* Right: info panel */
+.bodymap-info-panel {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.bodymap-section-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+
+/* Selected zones pills */
+.zones-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+}
+
+.zone-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 20px;
+  font-size: 0.70rem;
+  font-weight: 600;
+  background: rgba(232,64,64,0.12);
+  color: #ff8080;
+  border: 1px solid rgba(232,64,64,0.30);
+  animation: pillIn 0.20s var(--ease-bounce) both;
+}
+
+.zone-pill-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #e84040;
+  flex-shrink: 0;
+  animation: pulseDot 1.8s ease-in-out infinite;
+  color: #e84040;
+}
+
+@keyframes pillIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.zones-empty {
+  font-size: 0.76rem;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* Hint below the SVG */
+.bodymap-hint {
+  font-size: 0.60rem;
+  color: rgba(160,180,210,0.40);
+  text-align: center;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+/* ── Exam result section ────────────────────────────────── */
+.exam-banner {
+  background: rgba(59,130,246,0.06);
+  border: 1px solid rgba(59,130,246,0.18);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.exam-banner-icon {
+  color: var(--c-blue);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Two-column clinical grid ───────────────────────────── */
+.clinical-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 640px) { .clinical-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block conteudo %}
+<div class="atend-wrap">
+
+  <!-- ── Page header ──────────────────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">Registrar Atendimento</div>
+      <div class="page-subtitle">Prontuário · {{ consulta.paciente.nome_completo }}</div>
+    </div>
+    <a href="{% url 'listar_consultas' %}" class="btn-secondary">← Voltar</a>
+  </div>
+
+  <!-- ── Consulta info ────────────────────────────────────── -->
+  <div class="glass-card no-tilt" style="padding:20px 24px;margin-bottom:18px;">
+    <div class="bodymap-section-title">Dados da Consulta</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;">
+      <div>
+        <div style="font-size:0.70rem;color:var(--text-faint);">Paciente</div>
+        <div style="font-size:0.88rem;font-weight:700;color:var(--text-primary);">{{ consulta.paciente.nome_completo }}</div>
+      </div>
+      <div>
+        <div style="font-size:0.70rem;color:var(--text-faint);">Médico</div>
+        <div style="font-size:0.88rem;font-weight:700;color:var(--c-blue);">Dr(a). {{ consulta.medico.usuario.get_full_name }}</div>
+      </div>
+      <div>
+        <div style="font-size:0.70rem;color:var(--text-faint);">Data</div>
+        <div style="font-size:0.88rem;font-weight:700;color:var(--text-primary);">{{ consulta.data_consulta|date:"d/m/Y" }}</div>
+      </div>
+      <div>
+        <div style="font-size:0.70rem;color:var(--text-faint);">Horário</div>
+        <div style="font-size:0.88rem;font-weight:700;color:var(--text-primary);">{{ consulta.horario|time:"H:i" }}</div>
+      </div>
+    </div>
+    {% if consulta.observacoes %}
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-subtle);">
+      <div style="font-size:0.70rem;color:var(--text-faint);">Observações</div>
+      <div style="font-size:0.83rem;color:var(--text-secondary);">{{ consulta.observacoes }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       FORM
+       ══════════════════════════════════════════════════════ -->
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <!-- Hidden field that JS keeps updated -->
+    <input type="hidden" name="locais_dor" id="locaisDorInput" value="[]">
+
+    <!-- ── 1. MAPA CORPORAL ──────────────────────────────── -->
+    <div class="glass-card no-tilt bodymap-card" style="margin-bottom:16px;">
+
+      <!-- Left: SVG body -->
+      <div class="bodymap-svg-panel">
+        <div class="bodymap-svg-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          MAPA CORPORAL
+        </div>
+
+        <!-- ═══ BODY SVG ═════════════════════════════════ -->
+        <svg id="bodySvg" viewBox="0 0 200 490" xmlns="http://www.w3.org/2000/svg">
+
+          <!-- Background -->
+          <rect width="200" height="490" fill="#050818" rx="10"/>
+
+          <!-- Grid (subtle, anatomical) -->
+          <line x1="100" y1="0" x2="100" y2="490" stroke="rgba(100,140,220,0.05)" stroke-width="0.5"/>
+          <line x1="0" y1="245" x2="200" y2="245" stroke="rgba(100,140,220,0.05)" stroke-width="0.5"/>
+
+          <!-- ── BODY OUTLINE (X-ray style) ──────────────── -->
+          <!-- Head -->
+          <ellipse cx="100" cy="46" rx="30" ry="36" fill="none" stroke="rgba(170,210,255,0.20)" stroke-width="1.3"/>
+          <!-- Eyes hint -->
+          <ellipse cx="88"  cy="42" rx="4" ry="3" fill="none" stroke="rgba(170,210,255,0.10)" stroke-width="0.8"/>
+          <ellipse cx="112" cy="42" rx="4" ry="3" fill="none" stroke="rgba(170,210,255,0.10)" stroke-width="0.8"/>
+
+          <!-- Neck -->
+          <path d="M88 80 L88 106 L112 106 L112 80" fill="none" stroke="rgba(170,210,255,0.18)" stroke-width="1.2"/>
+
+          <!-- Torso -->
+          <path d="M46 106 Q40 130 36 160 L34 248 Q36 262 52 268 L100 274 L148 268 Q164 262 166 248 L164 160 Q160 130 154 106"
+                fill="none" stroke="rgba(170,210,255,0.18)" stroke-width="1.3"/>
+
+          <!-- Ribs (subtle) -->
+          <path d="M66 126 Q100 130 134 126" fill="none" stroke="rgba(170,210,255,0.06)" stroke-width="0.8" stroke-dasharray="3,3"/>
+          <path d="M60 140 Q100 144 140 140" fill="none" stroke="rgba(170,210,255,0.06)" stroke-width="0.8" stroke-dasharray="3,3"/>
+          <path d="M56 154 Q100 158 144 154" fill="none" stroke="rgba(170,210,255,0.06)" stroke-width="0.8" stroke-dasharray="3,3"/>
+          <!-- Spine -->
+          <line x1="100" y1="106" x2="100" y2="274" stroke="rgba(170,210,255,0.07)" stroke-width="0.8" stroke-dasharray="4,4"/>
+          <!-- Sternum -->
+          <line x1="100" y1="106" x2="100" y2="170" stroke="rgba(170,210,255,0.12)" stroke-width="1.0"/>
+
+          <!-- Left arm -->
+          <path d="M46 106 L30 148 L22 196 L18 238" fill="none" stroke="rgba(170,210,255,0.16)" stroke-width="1.2"/>
+          <ellipse cx="15" cy="247" rx="9" ry="14" fill="none" stroke="rgba(170,210,255,0.16)" stroke-width="1.2"/>
+
+          <!-- Right arm -->
+          <path d="M154 106 L170 148 L178 196 L182 238" fill="none" stroke="rgba(170,210,255,0.16)" stroke-width="1.2"/>
+          <ellipse cx="185" cy="247" rx="9" ry="14" fill="none" stroke="rgba(170,210,255,0.16)" stroke-width="1.2"/>
+
+          <!-- Pelvis/hip -->
+          <path d="M52 268 Q46 286 48 308 L72 316 L128 316 L152 308 Q154 286 148 268"
+                fill="none" stroke="rgba(170,210,255,0.16)" stroke-width="1.2"/>
+
+          <!-- Left leg -->
+          <path d="M72 316 L64 392 L60 454" fill="none" stroke="rgba(170,210,255,0.16)" stroke-width="1.2"/>
+          <ellipse cx="57" cy="462" rx="18" ry="9" fill="none" stroke="rgba(170,210,255,0.16)" stroke-width="1.2"/>
+
+          <!-- Right leg -->
+          <path d="M128 316 L136 392 L140 454" fill="none" stroke="rgba(170,210,255,0.16)" stroke-width="1.2"/>
+          <ellipse cx="143" cy="462" rx="18" ry="9" fill="none" stroke="rgba(170,210,255,0.16)" stroke-width="1.2"/>
+
+          <!-- ── SCAN LINE ─────────────────────────────── -->
+          <rect class="scan-line" x="0" y="0" width="200" height="2"
+                fill="rgba(59,130,246,0.30)" rx="1"/>
+
+          <!-- ── CLICKABLE ZONES ──────────────────────── -->
+          <!-- Each .bz zone: click → toggles selected class + updates JSON -->
+
+          <!-- Cabeça -->
+          <ellipse id="bz-cabeca" class="bz" data-label="Cabeça"
+                   cx="100" cy="46" rx="30" ry="36"/>
+
+          <!-- Pescoço -->
+          <rect    id="bz-pescoco" class="bz" data-label="Pescoço"
+                   x="87" y="79" width="26" height="28" rx="5"/>
+
+          <!-- Ombro Esq -->
+          <ellipse id="bz-ombro_esq" class="bz" data-label="Ombro Esq."
+                   cx="44" cy="108" rx="16" ry="13"/>
+
+          <!-- Ombro Dir -->
+          <ellipse id="bz-ombro_dir" class="bz" data-label="Ombro Dir."
+                   cx="156" cy="108" rx="16" ry="13"/>
+
+          <!-- Tórax Esq -->
+          <rect    id="bz-torax_esq" class="bz" data-label="Tórax Esq."
+                   x="46" y="106" width="54" height="62" rx="4"/>
+
+          <!-- Tórax Dir -->
+          <rect    id="bz-torax_dir" class="bz" data-label="Tórax Dir."
+                   x="100" y="106" width="54" height="62" rx="4"/>
+
+          <!-- Abdômen Sup -->
+          <rect    id="bz-abdomen_sup" class="bz" data-label="Abdômen Sup."
+                   x="44" y="168" width="112" height="50" rx="4"/>
+
+          <!-- Abdômen Inf -->
+          <rect    id="bz-abdomen_inf" class="bz" data-label="Abdômen Inf."
+                   x="44" y="218" width="112" height="52" rx="4"/>
+
+          <!-- Braço Esq -->
+          <rect    id="bz-braco_esq" class="bz" data-label="Braço Esq."
+                   x="20" y="106" width="24" height="80" rx="12"/>
+
+          <!-- Braço Dir -->
+          <rect    id="bz-braco_dir" class="bz" data-label="Braço Dir."
+                   x="156" y="106" width="24" height="80" rx="12"/>
+
+          <!-- Antebraço Esq -->
+          <rect    id="bz-antebraco_esq" class="bz" data-label="Antebraço Esq."
+                   x="14" y="184" width="20" height="65" rx="10"/>
+
+          <!-- Antebraço Dir -->
+          <rect    id="bz-antebraco_dir" class="bz" data-label="Antebraço Dir."
+                   x="166" y="184" width="20" height="65" rx="10"/>
+
+          <!-- Quadril Esq -->
+          <rect    id="bz-quadril_esq" class="bz" data-label="Quadril Esq."
+                   x="44" y="268" width="56" height="50" rx="6"/>
+
+          <!-- Quadril Dir -->
+          <rect    id="bz-quadril_dir" class="bz" data-label="Quadril Dir."
+                   x="100" y="268" width="56" height="50" rx="6"/>
+
+          <!-- Coxa Esq -->
+          <rect    id="bz-coxa_esq" class="bz" data-label="Coxa Esq."
+                   x="46" y="318" width="36" height="74" rx="8"/>
+
+          <!-- Coxa Dir -->
+          <rect    id="bz-coxa_dir" class="bz" data-label="Coxa Dir."
+                   x="118" y="318" width="36" height="74" rx="8"/>
+
+          <!-- Joelho Esq -->
+          <ellipse id="bz-joelho_esq" class="bz" data-label="Joelho Esq."
+                   cx="64" cy="397" rx="18" ry="14"/>
+
+          <!-- Joelho Dir -->
+          <ellipse id="bz-joelho_dir" class="bz" data-label="Joelho Dir."
+                   cx="136" cy="397" rx="18" ry="14"/>
+
+          <!-- Perna Esq -->
+          <rect    id="bz-perna_esq" class="bz" data-label="Perna Esq."
+                   x="47" y="410" width="34" height="72" rx="8"/>
+
+          <!-- Perna Dir -->
+          <rect    id="bz-perna_dir" class="bz" data-label="Perna Dir."
+                   x="119" y="410" width="34" height="72" rx="8"/>
+
+        </svg>
+        <!-- /bodySvg -->
+
+        <div class="bodymap-hint">
+          Clique nas regiões<br>para marcar a dor
+        </div>
+      </div>
+      <!-- /bodymap-svg-panel -->
+
+      <!-- Right: selected zones + symptoms -->
+      <div class="bodymap-info-panel">
+
+        <!-- Selected zones -->
+        <div>
+          <div class="bodymap-section-title">Regiões Dolorosas</div>
+          <div id="zonesList" class="zones-list">
+            <span class="zones-empty">Nenhuma região selecionada</span>
+          </div>
+        </div>
+
+        <!-- Symptom description -->
+        <div>
+          <div class="bodymap-section-title">Sintomas Relatados</div>
+          {% if form.sintomas.errors %}
+          <div class="form-error" style="margin-bottom:6px;">{{ form.sintomas.errors.0 }}</div>
+          {% endif %}
+          <textarea name="sintomas" class="form-textarea" rows="4"
+            placeholder="Descreva os sintomas: intensidade da dor (1-10), quando começou, o que piora ou alivia, sintomas associados (febre, náusea, etc.)...">{{ form.sintomas.value|default:'' }}</textarea>
+        </div>
+
+        <!-- Exam result tip -->
+        <div class="exam-banner">
+          <svg class="exam-banner-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <div style="font-size:0.76rem;color:rgba(130,170,230,0.85);line-height:1.45;">
+            Registre o resultado de <strong style="color:var(--c-blue);">raio-x, exames laboratoriais ou de imagem</strong> na seção "Resultado de Exames" abaixo.
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- /bodymap-card -->
+
+    <!-- ── 2. ANAMNESE + DIAGNÓSTICO ──────────────────────── -->
+    <div class="clinical-grid" style="margin-bottom:16px;">
+
+      <div class="glass-card no-tilt" style="padding:22px 24px;">
+        <div class="bodymap-section-title">Anamnese</div>
+        {% if form.anamnese.errors %}
+        <div class="form-error" style="margin-bottom:6px;">{{ form.anamnese.errors.0 }}</div>
+        {% endif %}
+        <textarea name="anamnese" class="form-textarea" rows="6"
+          placeholder="Histórico clínico, queixas principais, evolução dos sintomas...">{{ form.anamnese.value|default:'' }}</textarea>
+      </div>
+
+      <div class="glass-card no-tilt" style="padding:22px 24px;">
+        <div class="bodymap-section-title">Diagnóstico</div>
+        {% if form.diagnostico.errors %}
+        <div class="form-error" style="margin-bottom:6px;">{{ form.diagnostico.errors.0 }}</div>
+        {% endif %}
+        <textarea name="diagnostico" class="form-textarea" rows="6"
+          placeholder="Diagnóstico clínico, CID se aplicável...">{{ form.diagnostico.value|default:'' }}</textarea>
+      </div>
+
+    </div>
+
+    <!-- ── 3. RESULTADO DE EXAMES + PRESCRIÇÃO ───────────── -->
+    <div class="clinical-grid" style="margin-bottom:16px;">
+
+      <div class="glass-card no-tilt" style="padding:22px 24px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div style="width:22px;height:22px;border-radius:6px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--c-blue)" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+            </svg>
+          </div>
+          <div class="bodymap-section-title" style="margin-bottom:0;">Resultado de Exames</div>
+        </div>
+        <textarea name="resultado_exame" class="form-textarea" rows="5"
+          placeholder="Resultado de raio-x, tomografia, ultrassom, exames laboratoriais...&#10;&#10;Ex: Raio-X tórax — fratura de costela em arco médio esquerdo (5ª costela). Sem hemotórax.">{{ form.resultado_exame.value|default:'' }}</textarea>
+      </div>
+
+      <div class="glass-card no-tilt" style="padding:22px 24px;">
+        <div class="bodymap-section-title">
+          Prescrição
+          <span style="font-size:0.65rem;font-weight:400;color:var(--text-faint);letter-spacing:0;text-transform:none;margin-left:4px;">(opcional)</span>
+        </div>
+        <textarea name="prescricao" class="form-textarea" rows="5"
+          placeholder="Medicamentos, doses e orientações...">{{ form.prescricao.value|default:'' }}</textarea>
+      </div>
+
+    </div>
+
+    <!-- ── Warning + Submit ───────────────────────────────── -->
+    <div class="glass-card no-tilt" style="padding:16px 20px;margin-bottom:0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.78rem;color:var(--c-amber);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Ao finalizar, a consulta será marcada como <strong>Realizada</strong>.
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <a href="{% url 'listar_consultas' %}" class="btn-secondary">Cancelar</a>
+          <button type="submit" class="btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            Finalizar Atendimento
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </form>
+</div>
+
+
+<!-- ═══ BODY MAP SCRIPT ════════════════════════════════════════ -->
+<script>
+(function bodyMap() {
+
+  // All clickable zones: [svgId, label]
+  const ZONE_DEFS = [
+    ['bz-cabeca',       'Cabeça'],
+    ['bz-pescoco',      'Pescoço'],
+    ['bz-ombro_esq',    'Ombro Esq.'],
+    ['bz-ombro_dir',    'Ombro Dir.'],
+    ['bz-torax_esq',    'Tórax Esq.'],
+    ['bz-torax_dir',    'Tórax Dir.'],
+    ['bz-abdomen_sup',  'Abdômen Sup.'],
+    ['bz-abdomen_inf',  'Abdômen Inf.'],
+    ['bz-braco_esq',    'Braço Esq.'],
+    ['bz-braco_dir',    'Braço Dir.'],
+    ['bz-antebraco_esq','Antebraço Esq.'],
+    ['bz-antebraco_dir','Antebraço Dir.'],
+    ['bz-quadril_esq',  'Quadril Esq.'],
+    ['bz-quadril_dir',  'Quadril Dir.'],
+    ['bz-coxa_esq',     'Coxa Esq.'],
+    ['bz-coxa_dir',     'Coxa Dir.'],
+    ['bz-joelho_esq',   'Joelho Esq.'],
+    ['bz-joelho_dir',   'Joelho Dir.'],
+    ['bz-perna_esq',    'Perna Esq.'],
+    ['bz-perna_dir',    'Perna Dir.'],
+  ];
+
+  const hiddenInput = document.getElementById('locaisDorInput');
+  const zonesList   = document.getElementById('zonesList');
+  const selected    = new Set();
+
+  function syncHidden() {
+    hiddenInput.value = JSON.stringify([...selected]);
+  }
+
+  function renderPills() {
+    if (selected.size === 0) {
+      zonesList.innerHTML = '<span class="zones-empty">Nenhuma região selecionada</span>';
+      return;
+    }
+    zonesList.innerHTML = '';
+    selected.forEach(id => {
+      const def = ZONE_DEFS.find(d => d[0].replace('bz-', '') === id);
+      if (!def) return;
+      const pill = document.createElement('span');
+      pill.className = 'zone-pill';
+      pill.innerHTML = `<span class="zone-pill-dot"></span>${def[1]}`;
+      zonesList.appendChild(pill);
+    });
+  }
+
+  // Attach click handlers to each zone
+  ZONE_DEFS.forEach(([svgId, label]) => {
+    const el = document.getElementById(svgId);
+    if (!el) return;
+    const id = svgId.replace('bz-', '');
+
+    // Tooltip title
+    el.setAttribute('title', label);
+
+    el.addEventListener('click', () => {
+      if (selected.has(id)) {
+        selected.delete(id);
+        el.classList.remove('selected');
+      } else {
+        selected.add(id);
+        el.classList.add('selected');
+      }
+      syncHidden();
+      renderPills();
+    });
+  });
+
+  renderPills();  // initial state
+})();
+</script>
+
+{% endblock %}
