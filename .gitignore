@@ -26,8 +26,11 @@ healing/staticfiles/
 .env.*
 *.env
 
-# Credenciais locais
+# Credenciais locais e arquivos pessoais
 USUARIOS.md
+*.docx
+*.doc
+*.pdf
 
 # OS
 .DS_Store
