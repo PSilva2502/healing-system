@@ -5,178 +5,202 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HEALING — Entrar</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/aurora.css' %}">
+  <link rel="stylesheet" href="{% static 'css/healing-futuristic.css' %}">
   <style>
-    .login-container {
-      min-height: 100vh;
+    body {
       display: flex;
       align-items: center;
       justify-content: center;
+      min-height: 100vh;
       padding: 24px;
-      position: relative;
-      z-index: 1;
     }
+
     .login-card {
       width: 100%;
       max-width: 420px;
-      background: rgba(10, 10, 30, 0.75);
-      backdrop-filter: blur(32px);
-      -webkit-backdrop-filter: blur(32px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 24px;
-      padding: 48px 40px;
-      box-shadow:
-        0 24px 64px rgba(0, 0, 0, 0.6),
-        0 0 0 1px rgba(124, 58, 237, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
-      animation: card-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+      background: var(--surface);
+      backdrop-filter: var(--blur-heavy);
+      -webkit-backdrop-filter: var(--blur-heavy);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: 44px 40px;
+      box-shadow: var(--shadow-float);
+      position: relative;
+      overflow: hidden;
     }
-    @keyframes card-rise {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
+      opacity: 0.5;
+      pointer-events: none;
     }
-    .login-logo {
-      font-size: 2.2rem;
-      font-weight: 900;
-      letter-spacing: -0.04em;
-      background: linear-gradient(135deg, #a78bfa, #38bdf8, #34d399);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      text-align: center;
-      margin-bottom: 6px;
+
+    body.dark .login-card::before {
+      background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
     }
-    .login-subtitle {
-      text-align: center;
-      font-size: 0.8rem;
-      color: rgba(100, 116, 139, 0.7);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 36px;
-    }
-    .divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
-      margin: 28px 0;
-    }
-    .submit-btn {
-      width: 100%;
-      padding: 13px;
-      background: linear-gradient(135deg, #7c3aed, #4f46e5);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: 0.03em;
-      transition: all 0.25s ease;
-      box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
-      margin-top: 8px;
-    }
-    .submit-btn:hover {
-      background: linear-gradient(135deg, #6d28d9, #4338ca);
-      box-shadow: 0 4px 28px rgba(124, 58, 237, 0.6);
-      transform: translateY(-1px);
-    }
-    .error-box {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.25);
-      border-radius: 10px;
-      padding: 12px 14px;
-      color: #fca5a5;
-      font-size: 0.83rem;
-      margin-bottom: 16px;
-    }
-    .brand-dots {
+
+    .login-brand {
       display: flex;
-      justify-content: center;
-      gap: 6px;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 32px;
     }
-    .brand-dot {
-      width: 6px; height: 6px;
+
+    .login-brand-dot {
+      width: 10px; height: 10px;
       border-radius: 50%;
-      animation: dot-pulse 2s ease-in-out infinite;
+      background: var(--accent);
+      flex-shrink: 0;
     }
-    .brand-dot:nth-child(1) { background: #a78bfa; animation-delay: 0s; }
-    .brand-dot:nth-child(2) { background: #38bdf8; animation-delay: 0.3s; }
-    .brand-dot:nth-child(3) { background: #34d399; animation-delay: 0.6s; }
-    @keyframes dot-pulse {
-      0%, 100% { opacity: 0.3; transform: scale(0.8); }
-      50%       { opacity: 1;   transform: scale(1.2); }
+
+    .login-brand-name {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.03em;
+    }
+
+    .login-heading {
+      font-family: var(--font-display);
+      font-size: 1.65rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .login-sub {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    .login-form-group {
+      margin-bottom: 16px;
+    }
+
+    .login-submit {
+      width: 100%;
+      padding: 13px;
+      background: var(--text-primary);
+      color: var(--bg-base);
+      border: none;
+      border-radius: var(--r-pill);
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--t-smooth);
+      margin-top: 8px;
+    }
+
+    .login-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    body.dark .login-submit {
+      background: var(--text-primary);
+      color: var(--bg-base);
+    }
+
+    .error-box {
+      background: var(--danger-bg);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: var(--r-sm);
+      padding: 10px 14px;
+      color: var(--danger);
+      font-size: 0.83rem;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
+    .form-error-inline {
+      font-size: 0.74rem;
+      color: var(--danger);
+      margin-top: 4px;
+    }
+
+    .login-footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      opacity: 0.6;
     }
   </style>
 </head>
 <body>
 
-<div class="aurora-bg">
-  <div class="aurora-orb aurora-orb-1"></div>
-  <div class="aurora-orb aurora-orb-2"></div>
-  <div class="aurora-orb aurora-orb-3"></div>
-  <div class="aurora-orb aurora-orb-4"></div>
-</div>
+<div class="login-card reveal active">
 
-<div class="login-container">
-  <div class="login-card">
-    <div class="login-logo">⬡ HEALING</div>
-    <div class="login-subtitle">Sistema de Gestão Clínica</div>
-    <div class="brand-dots">
-      <div class="brand-dot"></div>
-      <div class="brand-dot"></div>
-      <div class="brand-dot"></div>
-    </div>
-
-    {% if form.non_field_errors %}
-    <div class="error-box">
-      {% for erro in form.non_field_errors %}{{ erro }}{% endfor %}
-    </div>
-    {% endif %}
-
-    <form method="post" novalidate>
-      {% csrf_token %}
-
-      <div class="form-group">
-        <label class="form-label">E-mail</label>
-        <input
-          type="email"
-          name="email"
-          class="form-input"
-          placeholder="seu@email.com"
-          value="{{ form.email.value|default:'' }}"
-          autocomplete="email"
-          autofocus
-        >
-        {% if form.email.errors %}
-        <div class="form-error">{{ form.email.errors.0 }}</div>
-        {% endif %}
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Senha</label>
-        <input
-          type="password"
-          name="senha"
-          class="form-input"
-          placeholder="••••••••"
-          autocomplete="current-password"
-        >
-        {% if form.senha.errors %}
-        <div class="form-error">{{ form.senha.errors.0 }}</div>
-        {% endif %}
-      </div>
-
-      <button type="submit" class="submit-btn">Entrar no Sistema</button>
-    </form>
-
-    <div class="divider"></div>
-    <div style="text-align:center;font-size:0.72rem;color:rgba(100,116,139,0.4);letter-spacing:0.05em;">
-      HEALING © {% now "Y" %} — Todos os direitos reservados
-    </div>
+  <div class="login-brand">
+    <div class="login-brand-dot"></div>
+    <div class="login-brand-name">HEALING</div>
   </div>
+
+  <div class="login-heading">Bem-vindo de volta</div>
+  <div class="login-sub">Entre com suas credenciais para acessar o sistema</div>
+
+  {% if form.non_field_errors %}
+  <div class="error-box">
+    {% for erro in form.non_field_errors %}{{ erro }}{% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="login-form-group">
+      <label class="form-label">E-mail</label>
+      <input
+        type="email"
+        name="email"
+        class="form-input"
+        placeholder="seu@email.com"
+        value="{{ form.email.value|default:'' }}"
+        autocomplete="email"
+        autofocus
+      >
+      {% if form.email.errors %}
+      <div class="form-error-inline">{{ form.email.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <div class="login-form-group">
+      <label class="form-label">Senha</label>
+      <input
+        type="password"
+        name="senha"
+        class="form-input"
+        placeholder="••••••••"
+        autocomplete="current-password"
+      >
+      {% if form.senha.errors %}
+      <div class="form-error-inline">{{ form.senha.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="login-submit">Entrar no sistema</button>
+  </form>
+
+  <div class="login-footer">HEALING Sistema Clínico · {% now "Y" %}</div>
 </div>
 
+<script>
+  // Dark mode na login page também
+  (function() {
+    var saved = localStorage.getItem('theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (saved === 'dark' || (!saved && prefersDark)) {
+      document.body.classList.add('dark');
+    }
+  })();
+</script>
 </body>
 </html>

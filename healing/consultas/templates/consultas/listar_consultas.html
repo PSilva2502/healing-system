@@ -1,102 +1,1080 @@
 {% extends 'core/base.html' %}
 {% load healing_tags %}
+{% load static %}
 
 {% block titulo %}Consultas{% endblock %}
 {% block topbar_titulo %}Gestão de Consultas{% endblock %}
-{% block topbar_subtitulo %}Agendamentos e atendimentos{% endblock %}
+{% block topbar_subtitulo %}Fluxo clínico · {{ hoje|date:"d \d\e F \d\e Y" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ══════════════════════════════════════════════
+   WORKFLOW LAYOUT — 3 zonas
+══════════════════════════════════════════════ */
+.wf-layout {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+/* ── Agenda lateral ─────────────────────────── */
+.wf-agenda {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  position: sticky;
+  top: 16px;
+}
+
+.wf-agenda-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 15px 10px;
+  border-bottom: 1px solid var(--border-l);
+}
+
+.wf-agenda-title {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.wf-date-chip {
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Agenda hoje */
+.wf-today-section {
+  padding: 10px 11px;
+  border-bottom: 1px solid var(--border-l);
+}
+
+.wf-today-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  margin-bottom: 5px;
+  padding: 0 3px;
+}
+
+.wf-today-empty {
+  font-size: 0.74rem;
+  color: var(--text-faint);
+  padding: 8px 3px 4px;
+}
+
+.wf-mini-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 7px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--t-fast);
+  margin-bottom: 1px;
+}
+
+.wf-mini-item:hover { background: var(--bg); }
+.wf-mini-item.selected { background: var(--accent-soft); }
+
+.wf-mini-time {
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  min-width: 32px;
+  flex-shrink: 0;
+}
+
+.wf-mini-name {
+  font-size: 0.74rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wf-mini-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Stats por status */
+.wf-stats-section { padding: 9px 11px; }
+
+.wf-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background var(--t-fast);
+  margin-bottom: 1px;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+}
+
+.wf-stat-row:hover { background: var(--surface-warm); }
+.wf-stat-row.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+.wf-stat-count {
+  margin-left: auto;
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wf-stat-row.active .wf-stat-count { color: var(--accent); }
+
+.wf-stat-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Toolbar ────────────────────────────────── */
+.wf-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.wf-chips {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.chip:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.chip-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.chip-active:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: #fff;
+}
+
+.chip-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+
+.chip-clear {
+  color: var(--danger);
+  border-color: var(--danger-bd);
+  background: var(--danger-bg);
+  font-size: 0.72rem;
+}
+
+.chip-date-input {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  border-radius: 20px;
+  padding: 4px 12px;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  height: 30px;
+}
+
+.chip-date-input:hover { border-color: var(--accent-border); }
+.chip-date-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/* ── Cards de consulta ──────────────────────── */
+.wf-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.wf-card {
+  display: grid;
+  grid-template-columns: 54px 18px 1fr auto;
+  align-items: center;
+  gap: 0 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 14px;
+  cursor: pointer;
+  transition: box-shadow var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+  position: relative;
+}
+
+.wf-card:hover {
+  border-color: var(--accent-border);
+  box-shadow: 0 2px 10px rgba(101, 132, 115, 0.07);
+  transform: translateY(-1px);
+}
+
+.wf-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.wf-card-hoje { border-left: 3px solid var(--accent); }
+.wf-card-cancelled { opacity: 0.6; }
+.wf-card-cancelled:hover { opacity: 1; }
+
+/* Time column */
+.wf-card-time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  padding-right: 2px;
+}
+
+.wf-card-hour {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.wf-card-date {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.wf-today-pill {
+  font-size: 0.53rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+/* Track line */
+.wf-card-track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: stretch;
+  padding: 3px 0;
+}
+
+.wf-track-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.wf-track-line {
+  flex: 1;
+  width: 1px;
+  background: var(--border);
+  margin: 3px 0;
+  min-height: 12px;
+}
+
+/* Card body */
+.wf-card-body { min-width: 0; }
+
+.wf-card-patient {
+  font-family: var(--font-display);
+  font-size: 0.89rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wf-card-doctor {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wf-card-obs {
+  font-size: 0.71rem;
+  color: var(--text-faint);
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Card actions */
+.wf-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.wf-status-tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.wf-status-agendada {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border: 1px solid var(--warning-bd);
+}
+
+.wf-status-realizada {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-bd);
+}
+
+.wf-status-cancelada {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger-bd);
+}
+
+.wf-btn-action {
+  display: inline-block;
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all var(--t-fast);
+  font-family: var(--font-display);
+}
+
+.wf-btn-attend {
+  background: var(--accent);
+  color: #fff;
+}
+
+.wf-btn-attend:hover { background: var(--accent-hover); color: #fff; }
+
+.wf-btn-view {
+  background: var(--surface-warm);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.wf-btn-view:hover {
+  background: var(--n-100);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+/* ── Empty state ────────────────────────────── */
+.wf-empty {
+  text-align: center;
+  padding: 56px 20px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+}
+
+.wf-empty-icon {
+  width: 50px; height: 50px;
+  background: var(--accent-soft);
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 13px;
+  color: var(--accent);
+}
+
+.wf-empty-title {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.wf-empty-desc {
+  font-size: 0.80rem;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+
+/* ── Drawer deslizante ──────────────────────── */
+.wf-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,25,50,0.15);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.20s;
+}
+
+.wf-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.wf-drawer {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 370px;
+  max-width: 94vw;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 201;
+  transform: translateX(100%);
+  transition: transform 0.24s cubic-bezier(0.22,1,0.36,1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wf-drawer.open { transform: translateX(0); }
+
+.drawer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.drawer-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+}
+
+.drawer-close {
+  background: var(--n-50);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 28px; height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.80rem;
+  transition: all var(--t-fast);
+}
+
+.drawer-close:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-color: var(--danger-bd);
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.drawer-hero {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 18px;
+}
+
+.drawer-avatar {
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+
+.drawer-patient-name {
+  font-family: var(--font-display);
+  font-size: 0.97rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
+.drawer-patient-sub {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+/* Timeline */
+.drawer-timeline {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: var(--surface-warm);
+  border: 1px solid var(--border-l);
+  border-radius: 10px;
+}
+
+.tl-step {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.70rem;
+}
+
+.tl-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tl-line {
+  width: 24px; height: 1px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.tl-label { color: var(--text-faint); font-weight: 500; }
+.tl-step.tl-active .tl-label { color: var(--text-primary); font-weight: 700; }
+
+/* Info section */
+.drawer-section { margin-bottom: 16px; }
+
+.drawer-section-title {
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin-bottom: 8px;
+}
+
+.drawer-info-row {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 5px;
+}
+
+.drawer-info-label {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  min-width: 76px;
+  flex-shrink: 0;
+}
+
+.drawer-info-value {
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.drawer-obs {
+  background: var(--surface-warm);
+  border: 1px solid var(--border-l);
+  border-radius: 8px;
+  padding: 10px 13px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Drawer footer actions */
+.drawer-footer {
+  flex-shrink: 0;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.drawer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-display);
+  transition: all var(--t-fast);
+  width: 100%;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+.drawer-btn-primary { background: var(--accent); color: #fff; }
+.drawer-btn-primary:hover { background: var(--accent-hover); color: #fff; }
+
+.drawer-btn-secondary {
+  background: var(--surface-warm);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.drawer-btn-secondary:hover {
+  background: var(--n-100);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.drawer-btn-danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger-bd);
+}
+
+.drawer-btn-danger:hover { background: var(--danger); color: #fff; }
+
+/* ── Status dot colors ──────────────────────── */
+.sd-pending, .wf-dot-agendada, .chip-dot.pending,
+.wf-mini-dot.agendada, .wf-stat-dot.pending, .tl-dot.pending { background: var(--warning); }
+
+.sd-done, .wf-dot-realizada, .chip-dot.done,
+.wf-mini-dot.realizada, .wf-stat-dot.done, .tl-dot.done { background: var(--success); }
+
+.sd-cancelled, .wf-dot-cancelada, .chip-dot.cancelled,
+.wf-mini-dot.cancelada, .wf-stat-dot.cancelled, .tl-dot.cancelled { background: var(--danger); }
+
+.sd-neutral { background: var(--text-faint); }
+
+/* Dark mode overrides */
+body.dark .wf-overlay.open { background: rgba(5,8,20,0.50); }
+body.dark .wf-card:hover { box-shadow: 0 2px 10px rgba(101, 132, 115, 0.14); }
+
+/* Responsive */
+@media (max-width: 860px) {
+  .wf-layout { grid-template-columns: 1fr; }
+  .wf-agenda {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .wf-today-section {
+    border-bottom: none;
+    border-right: 1px solid var(--border-l);
+  }
+}
+
+@media (max-width: 620px) {
+  .wf-card { grid-template-columns: 48px 16px 1fr; }
+  .wf-card-actions { display: none; }
+  .wf-drawer { width: 100%; max-width: 100%; }
+}
+</style>
+{% endblock %}
 
 {% block conteudo %}
-<div class="page-header">
+<div class="wf-layout">
+
+  <!-- ════════════════════════════════════
+       ZONA 1 — Agenda Lateral
+  ═════════════════════════════════════ -->
+  <aside class="wf-agenda bento-card reveal d-1" style="padding: 0;">
+    <div class="wf-agenda-head">
+      <span class="wf-agenda-title">Agenda</span>
+      <span class="wf-date-chip">{{ hoje|date:"d/m" }}</span>
+    </div>
+
+    <div class="wf-today-section">
+      <div class="wf-today-label">Hoje</div>
+      {% if consultas_hoje %}
+        {% for c in consultas_hoje %}
+        <div class="wf-mini-item" id="mini-{{ c.pk }}" onclick="openDetailById('{{ c.pk }}')">
+          <span class="wf-mini-time">{{ c.horario|time:"H:i" }}</span>
+          <span class="wf-mini-name">{{ c.paciente.nome_completo|truncatechars:17 }}</span>
+          <span class="wf-mini-dot {{ c.status }}"></span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="wf-today-empty">Sem consultas hoje</div>
+      {% endif %}
+    </div>
+
+    <div class="wf-stats-section">
+      <a href="{% url 'listar_consultas' %}" class="wf-stat-row {% if not status_filtro and not data_filtro %}active{% endif %}">
+        <span class="wf-stat-dot sd-neutral"></span>
+        <span>Todas</span>
+        <span class="wf-stat-count">{{ total_agendadas|add:total_realizadas|add:total_canceladas }}</span>
+      </a>
+      <a href="?status=agendada{% if data_filtro %}&data={{ data_filtro }}{% endif %}" class="wf-stat-row {% if status_filtro == 'agendada' %}active{% endif %}">
+        <span class="wf-stat-dot pending"></span>
+        <span>Agendadas</span>
+        <span class="wf-stat-count">{{ total_agendadas }}</span>
+      </a>
+      <a href="?status=realizada{% if data_filtro %}&data={{ data_filtro }}{% endif %}" class="wf-stat-row {% if status_filtro == 'realizada' %}active{% endif %}">
+        <span class="wf-stat-dot done"></span>
+        <span>Realizadas</span>
+        <span class="wf-stat-count">{{ total_realizadas }}</span>
+      </a>
+      <a href="?status=cancelada{% if data_filtro %}&data={{ data_filtro }}{% endif %}" class="wf-stat-row {% if status_filtro == 'cancelada' %}active{% endif %}">
+        <span class="wf-stat-dot cancelled"></span>
+        <span>Canceladas</span>
+        <span class="wf-stat-count">{{ total_canceladas }}</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ════════════════════════════════════
+       ZONA 2 — Lista Operacional
+  ═════════════════════════════════════ -->
   <div>
-    <div class="page-title">Consultas</div>
-    <div class="page-subtitle">{{ consultas.count }} resultado{{ consultas.count|pluralize }}</div>
-  </div>
-  <a href="{% url 'agendar_consulta' %}" class="btn-primary">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
-    </svg>
-    Nova Consulta
-  </a>
-</div>
 
-<!-- Filtros -->
-<div class="glass-card" style="padding:16px 20px;margin-bottom:20px;">
-  <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-    <select name="status" class="form-select" style="width:auto;">
-      <option value="">Todos os status</option>
-      <option value="agendada" {% if status_filtro == 'agendada' %}selected{% endif %}>Agendadas</option>
-      <option value="realizada" {% if status_filtro == 'realizada' %}selected{% endif %}>Realizadas</option>
-      <option value="cancelada" {% if status_filtro == 'cancelada' %}selected{% endif %}>Canceladas</option>
-    </select>
-    <input type="date" name="data" class="form-input" style="width:180px;" value="{{ data_filtro }}" title="Filtrar por data">
-    <button type="submit" class="btn-secondary">Filtrar</button>
-    {% if status_filtro or data_filtro %}
-    <a href="{% url 'listar_consultas' %}" class="btn-secondary">Limpar</a>
-    {% endif %}
-  </form>
-</div>
+    <!-- Chips de filtro + ação -->
+    <div class="wf-toolbar">
+      <div class="wf-chips">
+        <a href="{% url 'listar_consultas' %}" class="chip {% if not status_filtro and not data_filtro %}chip-active{% endif %}">Todas</a>
+        <a href="?status=agendada{% if data_filtro %}&data={{ data_filtro }}{% endif %}"
+           class="chip {% if status_filtro == 'agendada' %}chip-active{% endif %}">
+          <span class="chip-dot pending"></span> Agendadas
+        </a>
+        <a href="?status=realizada{% if data_filtro %}&data={{ data_filtro }}{% endif %}"
+           class="chip {% if status_filtro == 'realizada' %}chip-active{% endif %}">
+          <span class="chip-dot done"></span> Realizadas
+        </a>
+        <a href="?status=cancelada{% if data_filtro %}&data={{ data_filtro }}{% endif %}"
+           class="chip {% if status_filtro == 'cancelada' %}chip-active{% endif %}">
+          <span class="chip-dot cancelled"></span> Canceladas
+        </a>
+        <form method="get" id="form-date" style="display:inline-flex;align-items:center;">
+          {% if status_filtro %}<input type="hidden" name="status" value="{{ status_filtro }}">{% endif %}
+          <input type="date" name="data" value="{{ data_filtro }}"
+                 onchange="this.form.submit()"
+                 class="chip-date-input"
+                 title="Filtrar por data">
+        </form>
+        {% if data_filtro %}
+        <a href="?{% if status_filtro %}status={{ status_filtro }}{% endif %}" class="chip chip-clear">✕ {{ data_filtro }}</a>
+        {% endif %}
+      </div>
+      {% if user.perfil == 'admin' or user.perfil == 'recepcionista' %}
+      <a href="{% url 'agendar_consulta' %}" class="btn-primary" style="font-size:0.80rem;padding:6px 14px;white-space:nowrap;">
+        + Nova Consulta
+      </a>
+      {% endif %}
+    </div>
 
-<div class="glass-card" style="overflow:hidden;">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Data / Hora</th>
-        <th>Paciente</th>
-        <th>Médico</th>
-        <th>Especialidade</th>
-        <th>Status</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
+    <!-- Lista de cards -->
+    <div class="wf-cards" id="wf-cards">
       {% for consulta in consultas %}
-      <tr {% if consulta.data_consulta == hoje and consulta.status == 'agendada' %}style="background:rgba(6,182,212,0.04);"{% endif %}>
-        <td>
-          <div style="font-weight:700;color:#e2e8f0;font-variant-numeric:tabular-nums;">
-            {{ consulta.data_consulta|date:"d/m/Y" }}
-          </div>
-          <div style="font-size:0.75rem;color:rgba(100,116,139,0.6);">{{ consulta.horario|time:"H:i" }}</div>
-          {% if consulta.data_consulta == hoje %}
-          <span style="font-size:0.65rem;color:#67e8f9;font-weight:600;letter-spacing:0.05em;">HOJE</span>
+      <div class="wf-card reveal d-2
+                  {% if consulta.data_consulta == hoje %}wf-card-hoje{% endif %}
+                  {% if consulta.status == 'cancelada' %}wf-card-cancelled{% endif %}"
+           id="card-{{ consulta.pk }}"
+           onclick="openDetail(this)"
+           data-pk="{{ consulta.pk }}"
+           data-paciente="{{ consulta.paciente.nome_completo }}"
+           data-medico="Dr(a). {{ consulta.medico.usuario.get_full_name }}"
+           data-especialidade="{{ consulta.medico.especialidade }}"
+           data-data="{{ consulta.data_consulta|date:'d/m/Y' }}"
+           data-horario="{{ consulta.horario|time:'H:i' }}"
+           data-status="{{ consulta.status }}"
+           data-status-display="{{ consulta.get_status_display }}"
+           data-observacoes="{{ consulta.observacoes|default:'' }}"
+           data-url-atender="{% url 'registrar_atendimento' consulta.pk %}"
+           data-url-editar="{% url 'editar_consulta' consulta.pk %}"
+           {% if consulta.atendimento %}data-url-ver="{% url 'detalhar_atendimento' consulta.pk %}"{% endif %}
+           data-pode-atender="{% if user.perfil == 'medico' or user.perfil == 'admin' %}1{% endif %}"
+           data-pode-editar="{% if user.perfil == 'admin' or user.perfil == 'recepcionista' %}1{% endif %}"
+           data-csrf="{{ csrf_token }}"
+           data-url-cancelar="{% url 'cancelar_consulta' consulta.pk %}">
+
+        <!-- Coluna de tempo -->
+        <div class="wf-card-time">
+          <span class="wf-card-hour">{{ consulta.horario|time:"H:i" }}</span>
+          <span class="wf-card-date">{{ consulta.data_consulta|date:"d/m" }}</span>
+          {% if consulta.data_consulta == hoje %}<span class="wf-today-pill">HOJE</span>{% endif %}
+        </div>
+
+        <!-- Linha de track com ponto de status -->
+        <div class="wf-card-track">
+          <div class="wf-track-dot wf-dot-{{ consulta.status }}"></div>
+          <div class="wf-track-line"></div>
+        </div>
+
+        <!-- Corpo do card -->
+        <div class="wf-card-body">
+          <div class="wf-card-patient">{{ consulta.paciente.nome_completo }}</div>
+          <div class="wf-card-doctor">Dr(a). {{ consulta.medico.usuario.get_full_name }} · {{ consulta.medico.especialidade }}</div>
+          {% if consulta.observacoes %}
+          <div class="wf-card-obs">{{ consulta.observacoes|truncatechars:72 }}</div>
           {% endif %}
-        </td>
-        <td>
-          <div style="font-weight:600;color:#cbd5e1;">{{ consulta.paciente.nome_completo }}</div>
-        </td>
-        <td>
-          <div style="font-weight:600;color:#cbd5e1;">Dr(a). {{ consulta.medico.usuario.get_full_name }}</div>
-        </td>
-        <td style="color:rgba(148,163,184,0.6);font-size:0.82rem;">{{ consulta.medico.especialidade }}</td>
-        <td><span class="badge {{ consulta.status|status_badge_cor }}">{{ consulta.get_status_display }}</span></td>
-        <td>
-          <div style="display:flex;gap:6px;">
-            {% if consulta.status == 'agendada' %}
-              {% if user.perfil == 'medico' or user.perfil == 'admin' or user.perfil == 'recepcionista' %}
-              <a href="{% url 'registrar_atendimento' consulta.pk %}" class="btn-green">Atender</a>
-              {% endif %}
-              <form method="post" action="{% url 'cancelar_consulta' consulta.pk %}" style="display:inline;" onsubmit="return confirm('Cancelar esta consulta?')">
-                {% csrf_token %}
-                <button type="submit" class="btn-danger">Cancelar</button>
-              </form>
-            {% elif consulta.status == 'realizada' and consulta.atendimento %}
-              <button class="btn-secondary" style="padding:6px 10px;font-size:0.72rem;cursor:default;">Realizada</button>
-            {% else %}
-              <span style="font-size:0.75rem;color:rgba(100,116,139,0.4);">—</span>
+        </div>
+
+        <!-- Ações inline (não propaga click para o drawer) -->
+        <div class="wf-card-actions" onclick="event.stopPropagation()">
+          <span class="wf-status-tag wf-status-{{ consulta.status }}">{{ consulta.get_status_display }}</span>
+          {% if consulta.status == 'agendada' %}
+            {% if user.perfil == 'medico' or user.perfil == 'admin' %}
+            <a href="{% url 'registrar_atendimento' consulta.pk %}" class="wf-btn-action wf-btn-attend">Atender →</a>
             {% endif %}
-          </div>
-        </td>
-      </tr>
+          {% elif consulta.status == 'realizada' and consulta.atendimento %}
+          <a href="{% url 'detalhar_atendimento' consulta.pk %}" class="wf-btn-action wf-btn-view">Prontuário</a>
+          {% endif %}
+        </div>
+
+      </div>
       {% empty %}
-      <tr>
-        <td colspan="6" style="text-align:center;padding:48px;color:rgba(100,116,139,0.5);">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:0.3;">
-            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      <div class="wf-empty">
+        <div class="wf-empty-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
           </svg>
-          Nenhuma consulta encontrada
-        </td>
-      </tr>
+        </div>
+        <div class="wf-empty-title">Nenhuma consulta encontrada</div>
+        <div class="wf-empty-desc">Ajuste os filtros ou agende uma nova consulta.</div>
+        {% if user.perfil == 'admin' or user.perfil == 'recepcionista' %}
+        <a href="{% url 'agendar_consulta' %}" class="btn-primary" style="font-size:0.82rem;padding:8px 18px;">Agendar Consulta</a>
+        {% endif %}
+      </div>
       {% endfor %}
-    </tbody>
-  </table>
+    </div>
+  </div>
+
 </div>
+
+<!-- ════════════════════════════════════
+     ZONA 3 — Drawer de Detalhes
+═════════════════════════════════════ -->
+<div class="wf-overlay" id="wf-overlay" onclick="closeDetail()"></div>
+
+<aside class="wf-drawer" id="wf-drawer">
+  <div class="drawer-top">
+    <span class="drawer-label">Detalhes da Consulta</span>
+    <button class="drawer-close" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+  <div class="drawer-footer" id="drawer-footer"></div>
+</aside>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let _activeCard = null;
+
+function openDetail(card) {
+  _activeCard = card;
+  const d = card.dataset;
+
+  // highlight cards
+  document.querySelectorAll('.wf-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  document.querySelectorAll('.wf-mini-item').forEach(c => c.classList.remove('selected'));
+  const mini = document.getElementById('mini-' + d.pk);
+  if (mini) mini.classList.add('selected');
+
+  // Avatar initials
+  const parts = (d.paciente || '').trim().split(/\s+/);
+  const initials = parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : (parts[0] || '?').substring(0, 2).toUpperCase();
+
+  // Timeline
+  const isCancelled = d.status === 'cancelada';
+  const isRealizada = d.status === 'realizada';
+  let timelineHTML = '';
+
+  if (isCancelled) {
+    timelineHTML = `
+      <div class="tl-step tl-active">
+        <div class="tl-dot cancelled"></div>
+        <span class="tl-label">Cancelada</span>
+      </div>`;
+  } else {
+    timelineHTML = `
+      <div class="tl-step tl-active">
+        <div class="tl-dot pending"></div>
+        <span class="tl-label">Agendada</span>
+      </div>
+      <div class="tl-line"></div>
+      <div class="tl-step ${isRealizada ? 'tl-active' : ''}">
+        <div class="tl-dot done" style="${!isRealizada ? 'opacity:0.25' : ''}"></div>
+        <span class="tl-label">Realizada</span>
+      </div>`;
+  }
+
+  // Observations
+  const obsHtml = d.observacoes
+    ? `<div class="drawer-section">
+         <div class="drawer-section-title">Observações</div>
+         <div class="drawer-obs">${esc(d.observacoes)}</div>
+       </div>`
+    : '';
+
+  // Body HTML
+  document.getElementById('drawer-body').innerHTML = `
+    <div class="drawer-hero">
+      <div class="drawer-avatar">${initials}</div>
+      <div>
+        <div class="drawer-patient-name">${esc(d.paciente)}</div>
+        <div class="drawer-patient-sub">${esc(d.especialidade)}</div>
+      </div>
+    </div>
+
+    <div class="drawer-timeline">${timelineHTML}</div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">Informações</div>
+      <div class="drawer-info-row">
+        <span class="drawer-info-label">Data</span>
+        <span class="drawer-info-value">${esc(d.data)}</span>
+      </div>
+      <div class="drawer-info-row">
+        <span class="drawer-info-label">Horário</span>
+        <span class="drawer-info-value">${esc(d.horario)}</span>
+      </div>
+      <div class="drawer-info-row">
+        <span class="drawer-info-label">Médico</span>
+        <span class="drawer-info-value">${esc(d.medico)}</span>
+      </div>
+      <div class="drawer-info-row">
+        <span class="drawer-info-label">Status</span>
+        <span class="wf-status-tag wf-status-${esc(d.status)}">${esc(d.statusDisplay)}</span>
+      </div>
+    </div>
+
+    ${obsHtml}
+  `;
+
+  // Footer actions
+  let footerHTML = '';
+  if (d.status === 'agendada') {
+    if (d.podeAtender === '1') {
+      footerHTML += `<a href="${esc(d.urlAtender)}" class="drawer-btn drawer-btn-primary">Iniciar Atendimento →</a>`;
+    }
+    if (d.podeEditar === '1') {
+      footerHTML += `<a href="${esc(d.urlEditar)}" class="drawer-btn drawer-btn-secondary">Editar Consulta</a>`;
+    }
+    footerHTML += `<button class="drawer-btn drawer-btn-danger"
+        onclick="cancelarConsulta('${esc(d.urlCancelar)}','${esc(d.csrf)}')">
+        Cancelar Consulta
+    </button>`;
+  } else if (d.status === 'realizada' && d.urlVer) {
+    footerHTML += `<a href="${esc(d.urlVer)}" class="drawer-btn drawer-btn-primary">Ver Prontuário</a>`;
+  }
+
+  document.getElementById('drawer-footer').innerHTML = footerHTML;
+
+  // Open
+  document.getElementById('wf-drawer').classList.add('open');
+  document.getElementById('wf-overlay').classList.add('open');
+}
+
+function openDetailById(pk) {
+  const card = document.getElementById('card-' + pk);
+  if (card) openDetail(card);
+}
+
+function closeDetail() {
+  document.getElementById('wf-drawer').classList.remove('open');
+  document.getElementById('wf-overlay').classList.remove('open');
+  if (_activeCard) { _activeCard.classList.remove('selected'); _activeCard = null; }
+  document.querySelectorAll('.wf-mini-item').forEach(c => c.classList.remove('selected'));
+}
+
+function cancelarConsulta(url, csrf) {
+  if (!confirm('Cancelar esta consulta? Esta ação não pode ser desfeita.')) return;
+  const f = document.createElement('form');
+  f.method = 'POST';
+  f.action = url;
+  const t = document.createElement('input');
+  t.type = 'hidden'; t.name = 'csrfmiddlewaretoken'; t.value = csrf;
+  f.appendChild(t);
+  document.body.appendChild(f);
+  f.submit();
+}
+
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+</script>
 {% endblock %}

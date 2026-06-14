@@ -70,6 +70,8 @@ Acesse: http://127.0.0.1:8000/entrar/
 
 | Perfil   | E-mail                 | Senha       |
 |----------|------------------------|-------------|
-| Admin    | admin@healing.com      | admin123    |
-| Médico   | ana@healing.com        | medico123   |
-| Paciente | joao@email.com         | paciente123 |
+ Admin:          admin@healing.com / admin123
+  Recepcionista:  recepcao@healing.com / recepcao123
+  Médico:         ana@healing.com / medico123
+  Médico:         roberto@healing.com / medico123
+  Médico:         fernanda@healing.com / medico123

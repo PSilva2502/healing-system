@@ -6,17 +6,17 @@
 
 {% block conteudo %}
 <div style="max-width:600px;margin:0 auto;">
-  <div class="page-header">
-    <div class="page-title">{{ titulo }}</div>
+  <div class="futuristic-header reveal d-1">
+    <div class="f-title">{{ titulo }}</div>
     <a href="{% url 'listar_pacientes' %}" class="btn-secondary">← Voltar</a>
   </div>
 
-  <div class="glass-card" style="padding:32px;">
+  <div class="bento-card reveal" style="padding:32px;">
     <form method="post" novalidate>
       {% csrf_token %}
 
       <!-- Dados do Paciente -->
-      <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(100,116,139,0.6);margin-bottom:16px;">
+      <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;">
         Dados Pessoais
       </div>
 
@@ -34,19 +34,19 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">E-mail <span style="font-weight:400;color:rgba(100,116,139,0.5);">(opcional)</span></label>
+        <label class="form-label">E-mail <span style="font-weight:400;color:var(--text-faint);">(opcional)</span></label>
         <input type="email" name="email" class="form-input" value="{{ form.email.value|default:'' }}" placeholder="paciente@email.com">
         {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
       </div>
 
-      <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(100,116,139,0.6);margin:24px 0 16px;">
+      <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin:24px 0 16px;">
         Dados Clínicos
       </div>
 
       <div class="form-group">
         <label class="form-label">CPF</label>
         <input type="text" name="cpf" class="form-input" value="{{ form.cpf.value|default:'' }}" placeholder="00000000000" maxlength="11">
-        <div style="font-size:0.72rem;color:rgba(100,116,139,0.5);margin-top:4px;">Somente números, sem pontuação</div>
+        <div style="font-size:0.72rem;color:var(--text-faint);margin-top:4px;">Somente números, sem pontuação</div>
         {% if form.cpf.errors %}<div class="form-error">{{ form.cpf.errors.0 }}</div>{% endif %}
       </div>
 

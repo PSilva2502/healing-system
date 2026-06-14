@@ -6,10 +6,10 @@
 {% block topbar_subtitulo %}Administre os acessos ao sistema{% endblock %}
 
 {% block conteudo %}
-<div class="page-header">
+<div class="futuristic-header reveal d-1">
   <div>
-    <div class="page-title">Usuários</div>
-    <div class="page-subtitle">{{ usuarios.count }} usuário{{ usuarios.count|pluralize }} cadastrado{{ usuarios.count|pluralize }}</div>
+    <div class="f-title">Usuários</div>
+    <div class="f-subtitle">{{ usuarios.count }} usuário{{ usuarios.count|pluralize }} cadastrado{{ usuarios.count|pluralize }}</div>
   </div>
   <a href="{% url 'criar_usuario' %}" class="btn-primary">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -19,7 +19,7 @@
   </a>
 </div>
 
-<div class="glass-card" style="overflow:hidden;">
+<div class="bento-card reveal d-2" style="overflow:hidden;padding:0;">
   <table class="data-table">
     <thead>
       <tr>
@@ -34,21 +34,21 @@
             <div class="user-avatar" style="width:32px;height:32px;font-size:0.75rem;">
               {{ usuario.first_name|slice:":1"|upper }}{{ usuario.last_name|slice:":1"|upper }}
             </div>
-            <div style="font-weight:600;color:#e2e8f0;">{{ usuario.get_full_name }}</div>
+            <div style="font-weight:600;color:var(--text-primary);">{{ usuario.get_full_name }}</div>
           </div>
         </td>
-        <td style="color:rgba(148,163,184,0.7);">{{ usuario.email }}</td>
+        <td style="color:var(--text-muted);">{{ usuario.email }}</td>
         <td><span class="badge {{ usuario.perfil|perfil_badge_cor }}">{{ usuario.get_perfil_display }}</span></td>
         <td>
           {% if usuario.is_active %}
-          <span class="badge" style="color:#6ee7b7;background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.25);">Ativo</span>
+          <span class="badge badge-success">Ativo</span>
           {% else %}
-          <span class="badge" style="color:#f87171;background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25);">Inativo</span>
+          <span class="badge badge-danger">Inativo</span>
           {% endif %}
         </td>
       </tr>
       {% empty %}
-      <tr><td colspan="4" style="text-align:center;padding:40px;color:rgba(100,116,139,0.5);">Nenhum usuário encontrado</td></tr>
+      <tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted);">Nenhum usuário encontrado</td></tr>
       {% endfor %}
     </tbody>
   </table>

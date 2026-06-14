@@ -113,3 +113,10 @@ class FormularioAtendimento(forms.ModelForm):
             return result if isinstance(result, list) else []
         except (json.JSONDecodeError, ValueError):
             return []
+
+
+class FormularioEdicaoConsulta(FormularioAgendamentoAdmin):
+    """Edição de consulta pela recepção — sem restrição de data mínima."""
+
+    def clean_data_consulta(self):
+        return self.cleaned_data.get('data_consulta')

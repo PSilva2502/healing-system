@@ -11,6 +11,7 @@ from core.auditoria import registrar_auditoria
 from consultas.models import Consulta, Atendimento
 from consultas.forms import (
     FormularioAgendamento, FormularioAgendamentoAdmin, FormularioAtendimento,
+    FormularioEdicaoConsulta,
 )
 
 
@@ -23,15 +24,17 @@ class ListarConsultasView(LoginRequiredMixin, TemplateView):
         status_filtro = self.request.GET.get('status', '')
         data_filtro = self.request.GET.get('data', '')
         medico_filtro = self.request.GET.get('medico', '')
+        hoje = date.today()
 
         if usuario.perfil == 'medico':
             try:
-                consultas = Consulta.objects.filter(medico__usuario=usuario)
+                base_qs = Consulta.objects.filter(medico__usuario=usuario)
             except Exception:
-                consultas = Consulta.objects.none()
+                base_qs = Consulta.objects.none()
         else:
-            consultas = Consulta.objects.all()
+            base_qs = Consulta.objects.all()
 
+        consultas = base_qs
         if status_filtro:
             consultas = consultas.filter(status=status_filtro)
         if data_filtro:
@@ -44,7 +47,13 @@ class ListarConsultasView(LoginRequiredMixin, TemplateView):
         ).order_by('data_consulta', 'horario')
         ctx['status_filtro'] = status_filtro
         ctx['data_filtro'] = data_filtro
-        ctx['hoje'] = date.today()
+        ctx['hoje'] = hoje
+        ctx['consultas_hoje'] = base_qs.filter(
+            data_consulta=hoje, status='agendada'
+        ).select_related('paciente', 'medico__usuario').order_by('horario')[:10]
+        ctx['total_agendadas'] = base_qs.filter(status='agendada').count()
+        ctx['total_realizadas'] = base_qs.filter(status='realizada').count()
+        ctx['total_canceladas'] = base_qs.filter(status='cancelada').count()
         return ctx
 
 
@@ -106,8 +115,7 @@ class RegistrarAtendimentoView(LoginRequiredMixin, View):
         if request.user.perfil == 'medico' and consulta.medico.usuario != request.user:
             raise PermissionDenied
         if hasattr(consulta, 'atendimento'):
-            messages.info(request, 'Atendimento já registrado.')
-            return redirect('listar_consultas')
+            return redirect('detalhar_atendimento', pk=consulta.pk)
         form = FormularioAtendimento()
         return render(request, self.template_name, {'form': form, 'consulta': consulta})
 
@@ -125,5 +133,59 @@ class RegistrarAtendimentoView(LoginRequiredMixin, View):
             registrar_auditoria('atendimento', 'INSERT')
             registrar_auditoria('consulta', 'UPDATE', {'status': 'agendada'})
             messages.success(request, 'Atendimento registrado com sucesso!')
+            return redirect('detalhar_atendimento', pk=consulta.pk)
+        return render(request, self.template_name, {'form': form, 'consulta': consulta})
+
+
+class DetalharAtendimentoView(LoginRequiredMixin, View):
+    template_name = 'consultas/detalhar_atendimento.html'
+
+    def get(self, request, pk):
+        consulta = get_object_or_404(Consulta, pk=pk)
+        if request.user.perfil == 'medico' and consulta.medico.usuario != request.user:
+            raise PermissionDenied
+        if not hasattr(consulta, 'atendimento'):
+            messages.error(request, 'Esta consulta não possui atendimento registrado.')
+            return redirect('listar_consultas')
+        return render(request, self.template_name, {
+            'consulta': consulta,
+            'atendimento': consulta.atendimento,
+        })
+
+
+@method_decorator(exige_perfil('admin', 'recepcionista'), name='dispatch')
+class EditarConsultaView(LoginRequiredMixin, View):
+    template_name = 'consultas/form_edicao_consulta.html'
+
+    def _get_consulta_editavel(self, pk):
+        consulta = get_object_or_404(Consulta, pk=pk)
+        if consulta.status == 'cancelada':
+            return consulta, False
+        return consulta, True
+
+    def get(self, request, pk):
+        consulta, editavel = self._get_consulta_editavel(pk)
+        if not editavel:
+            messages.error(request, 'Consultas canceladas não podem ser editadas.')
+            return redirect('listar_consultas')
+        form = FormularioEdicaoConsulta(instance=consulta)
+        return render(request, self.template_name, {'form': form, 'consulta': consulta})
+
+    def post(self, request, pk):
+        consulta, editavel = self._get_consulta_editavel(pk)
+        if not editavel:
+            messages.error(request, 'Consultas canceladas não podem ser editadas.')
+            return redirect('listar_consultas')
+        dados_anteriores = {
+            'paciente': str(consulta.paciente),
+            'medico': str(consulta.medico),
+            'data_consulta': str(consulta.data_consulta),
+            'horario': consulta.horario,
+        }
+        form = FormularioEdicaoConsulta(request.POST, instance=consulta)
+        if form.is_valid():
+            form.save()
+            registrar_auditoria('consulta', 'UPDATE', dados_anteriores)
+            messages.success(request, 'Consulta atualizada com sucesso!')
             return redirect('listar_consultas')
         return render(request, self.template_name, {'form': form, 'consulta': consulta})

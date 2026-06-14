@@ -1,110 +1,138 @@
 {% extends 'core/base.html' %}
 {% load healing_tags %}
 
-{% block titulo %}Painel Médico{% endblock %}
-{% block topbar_titulo %}Painel do Médico{% endblock %}
-{% block topbar_subtitulo %}Sua agenda e atendimentos{% endblock %}
+{% block titulo %}Dashboard Médico{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Doctor Profile */
+.doc-profile {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.doc-avatar {
+  width: 80px; height: 80px;
+  border-radius: var(--r-xl);
+  background: var(--accent);
+  color: var(--bg-base);
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 12px 32px rgba(196, 98, 45, 0.25);
+}
+.doc-info h2 { font-size: 2rem; margin-bottom: 4px; }
+.doc-info p { color: var(--text-secondary); font-size: 1rem; }
+
+/* Stat Numbers */
+.bento-num {
+  font-family: var(--font-display);
+  font-size: 4rem;
+  font-weight: 300;
+  letter-spacing: -0.05em;
+  color: var(--accent);
+  line-height: 1;
+}
+
+/* Agenda Timeline */
+.agenda-item {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 20px;
+  align-items: center;
+  padding: 20px;
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.4);
+  margin-bottom: 12px;
+  transition: all var(--t-smooth);
+}
+body.dark .agenda-item { background: rgba(0, 0, 0, 0.2); }
+.agenda-item:hover {
+  background: var(--surface-solid);
+  transform: scale(1.02);
+  box-shadow: var(--shadow-sm);
+}
+.a-time {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+}
+.a-patient {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+}
+.a-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+</style>
+{% endblock %}
 
 {% block conteudo %}
-<div class="page-header">
-  <div>
-    <div class="page-title">Dr(a). {{ user.first_name }} {{ user.last_name }}</div>
-    <div class="page-subtitle">
-      {% if user.medico %}{{ user.medico.especialidade }} — CRM {{ user.medico.crm }}{% endif %}
-    </div>
-  </div>
-  <a href="{% url 'agendar_consulta' %}" class="btn-primary">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
-    </svg>
-    Nova Consulta
-  </a>
-</div>
+<div class="bento-grid" style="margin-top: 40px;">
 
-<!-- Stats -->
-<div class="grid-stats-3" style="margin-bottom:32px;">
-  <div class="stat-card cyan">
-    <div class="stat-icon cyan">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-      </svg>
+  <!-- Hero Profile -->
+  <div class="bento-card span-8 reveal d-1">
+    <div class="doc-profile">
+      <div class="doc-avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</div>
+      <div class="doc-info">
+        <h2>Dr(a). {{ user.get_full_name }}</h2>
+        <p>{% if user.medico %}{{ user.medico.especialidade }} &bull; CRM {{ user.medico.crm }}{% endif %}</p>
+      </div>
+      <div style="margin-left: auto;">
+        <div style="text-align: right; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 8px;">{% now "l, d \d\e F" %}</div>
+        <a href="{% url 'agendar_consulta' %}" class="btn-primary">Nova Consulta</a>
+      </div>
     </div>
-    <div class="stat-value" style="color:#67e8f9;">{{ consultas_hoje }}</div>
-    <div class="stat-label">Consultas Hoje</div>
-  </div>
-  <div class="stat-card purple">
-    <div class="stat-icon purple">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-      </svg>
-    </div>
-    <div class="stat-value" style="color:#c4b5fd;">{{ pacientes_ativos }}</div>
-    <div class="stat-label">Pacientes Ativos</div>
-  </div>
-  <div class="stat-card green">
-    <div class="stat-icon green">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-      </svg>
-    </div>
-    <div class="stat-value" style="color:#6ee7b7;">{{ total_consultas_mes }}</div>
-    <div class="stat-label">Consultas no Mês</div>
-  </div>
-</div>
-
-<!-- Agenda Hoje -->
-<div class="glass-card" style="padding:24px;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-    <div style="font-size:0.95rem;font-weight:700;color:#e2e8f0;">Agenda de Hoje</div>
-    <a href="{% url 'listar_consultas' %}" style="font-size:0.75rem;color:#67e8f9;text-decoration:none;">Ver agenda completa →</a>
   </div>
 
-  {% if agenda_hoje %}
-  <div style="overflow-x:auto;">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Horário</th>
-          <th>Paciente</th>
-          <th>Observações</th>
-          <th>Status</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for consulta in agenda_hoje %}
-        <tr>
-          <td>
-            <span style="font-size:1.1rem;font-weight:700;color:#67e8f9;font-variant-numeric:tabular-nums;">
-              {{ consulta.horario|time:"H:i" }}
-            </span>
-          </td>
-          <td>
-            <div style="font-weight:600;color:#e2e8f0;">{{ consulta.paciente.nome_completo }}</div>
-          </td>
-          <td style="color:rgba(148,163,184,0.6);font-size:0.8rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-            {{ consulta.observacoes|default:"—" }}
-          </td>
-          <td><span class="badge {{ consulta.status|status_badge_cor }}">{{ consulta.get_status_display }}</span></td>
-          <td>
+  <!-- Today Stats -->
+  <div class="bento-card span-4 reveal d-2" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+    <div class="bento-num">{{ consultas_hoje }}</div>
+    <div style="font-size: 0.95rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; margin-top: 8px;">Consultas Hoje</div>
+  </div>
+
+  <!-- Agenda -->
+  <div class="bento-card span-12 reveal d-3">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <h3 style="font-size: 1.5rem; font-family: var(--font-display);">Fluxo de Atendimento</h3>
+      <a href="{% url 'listar_consultas' %}" class="btn-secondary">Agenda Completa</a>
+    </div>
+
+    {% if agenda_hoje %}
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+      {% for consulta in agenda_hoje %}
+        <div class="agenda-item">
+          <div class="a-time">{{ consulta.horario|time:"H:i" }}</div>
+          <div>
+            <div class="a-patient">{{ consulta.paciente.nome_completo }}</div>
+            <div class="a-sub">{{ consulta.observacoes|default:"Sem notas prévias" }}</div>
+          </div>
+          <div>
             {% if consulta.status == 'agendada' %}
-            <a href="{% url 'registrar_atendimento' consulta.pk %}" class="btn-green">
-              Registrar Atendimento
-            </a>
+            <a href="{% url 'registrar_atendimento' consulta.pk %}" class="btn-primary" style="padding: 8px 16px;">Iniciar</a>
+            {% elif consulta.status == 'realizada' and consulta.atendimento %}
+            <a href="{% url 'detalhar_atendimento' consulta.pk %}" class="btn-secondary" style="padding: 8px 16px;">Prontuário</a>
+            {% else %}
+            <span class="badge badge-{{ consulta.status }}">{{ consulta.get_status_display }}</span>
             {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+          </div>
+        </div>
+      {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 16px; opacity: 0.5;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <p style="font-size: 1.1rem;">Nenhuma consulta agendada para hoje.</p>
+      </div>
+    {% endif %}
   </div>
-  {% else %}
-  <div style="text-align:center;padding:40px;color:rgba(100,116,139,0.5);">
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:0.3;">
-      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-    </svg>
-    <div style="font-size:0.875rem;">Nenhuma consulta agendada para hoje</div>
-  </div>
-  {% endif %}
+
 </div>
 {% endblock %}

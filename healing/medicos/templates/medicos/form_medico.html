@@ -6,18 +6,18 @@
 
 {% block conteudo %}
 <div style="max-width:600px;margin:0 auto;">
-  <div class="page-header">
-    <div class="page-title">{{ titulo }}</div>
+  <div class="futuristic-header reveal d-1">
+    <div class="f-title">{{ titulo }}</div>
     <a href="{% url 'listar_medicos' %}" class="btn-secondary">← Voltar</a>
   </div>
 
-  <div class="glass-card" style="padding:32px;">
+  <div class="bento-card reveal" style="padding:32px;">
     <form method="post" enctype="multipart/form-data" novalidate>
       {% csrf_token %}
 
       {% if not medico %}
       <div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid rgba(255,255,255,0.06);">
-        <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(100,116,139,0.6);margin-bottom:16px;">
+        <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;">
           Dados de Acesso
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -43,7 +43,7 @@
       </div>
       {% endif %}
 
-      <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(100,116,139,0.6);margin-bottom:16px;">
+      <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;">
         Dados Profissionais
       </div>
 

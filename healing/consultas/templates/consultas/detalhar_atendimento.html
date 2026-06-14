@@ -1,0 +1,353 @@
+{% extends 'core/base.html' %}
+{% load healing_tags static %}
+
+{% block titulo %}Consulta — {{ consulta.paciente.nome_completo }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.atend-wrap { max-width: 920px; margin: 0 auto; }
+
+/* ── Bodymap card ────────────────────── */
+.bodymap-card {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 0;
+  overflow: hidden;
+}
+@media (max-width: 760px) { .bodymap-card { grid-template-columns: 1fr; } }
+
+/* ── SVG panel ───────────────────────── */
+.bodymap-svg-panel {
+  background: #0D0A08;
+  padding: 16px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--r-xl) 0 0 var(--r-xl);
+}
+
+#bodySvg {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  display: block;
+  user-select: none;
+}
+
+/* Dots — read-only (sem hover) */
+.pulse-dot {
+  fill: rgba(255,255,255,0.12);
+  stroke: rgba(255,255,255,0.35);
+  stroke-width: 3;
+  pointer-events: none;
+}
+.pulse-dot.selected {
+  fill: rgba(196,98,45,0.55);
+  stroke: #C4622D;
+  stroke-width: 8;
+  animation: pulseBeat3D 1.8s ease-in-out infinite alternate;
+}
+@keyframes pulseBeat3D {
+  0%   { stroke-width: 6;  filter: drop-shadow(0 0 8px rgba(196,98,45,0.6)); }
+  100% { stroke-width: 12; filter: drop-shadow(0 0 20px rgba(196,98,45,0.9)); }
+}
+
+.glass-scan {
+  fill: url(#scanGradient);
+  opacity: 0.7;
+  animation: scanMove 5s ease-in-out infinite alternate;
+}
+@keyframes scanMove {
+  0%   { transform: translateY(-50px); }
+  100% { transform: translateY(1050px); }
+}
+
+.bodymap-svg-label {
+  font-family: var(--font-display);
+  font-size: 0.60rem;
+  font-weight: 600;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.40);
+  margin-bottom: 10px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Info panel direito ──────────────── */
+.bodymap-info-panel {
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.zones-list { display: flex; flex-wrap: wrap; gap: 7px; min-height: 32px; }
+
+.zone-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 8px;
+  border-radius: var(--r-pill);
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(196,98,45,0.22);
+  font-family: var(--font-display);
+}
+.zone-pill-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── Field display ───────────────────── */
+.field-value {
+  font-size: 0.90rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.field-empty {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.65;
+}
+
+/* ── Clinical grid ───────────────────── */
+.clinical-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 680px) { .clinical-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block conteudo %}
+<div class="atend-wrap">
+
+  <div class="futuristic-header reveal d-1">
+    <div>
+      <div class="f-title">Prontuário</div>
+      <div class="f-subtitle">{{ consulta.paciente.nome_completo }} · {{ consulta.data_consulta|date:"d/m/Y" }}</div>
+    </div>
+    <a href="{% url 'listar_consultas' %}" class="btn-secondary">← Voltar</a>
+  </div>
+
+  <!-- Dados da consulta -->
+  <div class="bento-card reveal" style="padding:20px 24px;margin-bottom:18px;">
+    <div class="section-title">Dados da Consulta</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;">
+      <div>
+        <div style="font-size:0.70rem;color:var(--text-faint);">Paciente</div>
+        <div style="font-size:0.88rem;font-weight:700;color:var(--text-primary);">{{ consulta.paciente.nome_completo }}</div>
+      </div>
+      <div>
+        <div style="font-size:0.70rem;color:var(--text-faint);">Médico</div>
+        <div style="font-size:0.88rem;font-weight:700;color:var(--accent);">Dr(a). {{ consulta.medico.usuario.get_full_name }}</div>
+      </div>
+      <div>
+        <div style="font-size:0.70rem;color:var(--text-faint);">Data</div>
+        <div style="font-size:0.88rem;font-weight:700;color:var(--text-primary);">{{ consulta.data_consulta|date:"d/m/Y" }}</div>
+      </div>
+      <div>
+        <div style="font-size:0.70rem;color:var(--text-faint);">Horário</div>
+        <div style="font-size:0.88rem;font-weight:700;color:var(--text-primary);">{{ consulta.horario|time:"H:i" }}</div>
+      </div>
+      <div>
+        <div style="font-size:0.70rem;color:var(--text-faint);">Status</div>
+        <span class="badge {{ consulta.status|status_badge_cor }}">{{ consulta.get_status_display }}</span>
+      </div>
+    </div>
+    {% if consulta.observacoes %}
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-l);">
+      <div style="font-size:0.70rem;color:var(--text-faint);">Observações</div>
+      <div style="font-size:0.83rem;color:var(--text-secondary);">{{ consulta.observacoes }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Mapa corporal + sintomas -->
+  <div class="bento-card reveal bodymap-card" style="margin-bottom:16px;">
+
+    <div class="bodymap-svg-panel">
+      <div class="bodymap-svg-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        MAPA CORPORAL
+      </div>
+
+      
+      <!-- ═══ PREMIUM BODY SVG ═════════════════════════════════ -->
+      
+      <!-- ═══ 3D ANATOMIC BODY SVG ═════════════════════════════════ -->
+      <svg id="bodySvg" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="scanGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#C4622D" stop-opacity="0"   />
+            <stop offset="50%"  stop-color="#C4622D" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#C4622D" stop-opacity="0"   />
+          </linearGradient>
+        </defs>
+
+        <!-- ── 3D Render Image Background ──────────────── -->
+        <image href="{% static 'img/body_3d.png' %}" x="0" y="0" width="1000" height="1000" preserveAspectRatio="xMidYMid slice" />
+
+        <!-- ── GLASS SCAN LINE ─────────────────────────────── -->
+        <rect class="glass-scan" x="0" y="0" width="1000" height="80" rx="40"/>
+
+        <!-- ── PULSE DOTS (CLICKABLE ZONES) ──────────────────────── -->
+        <circle id="bz-cabeca"       class="pulse-dot bz" data-label="Cabeça"       cx="500" cy="150" r="22"/>
+        <circle id="bz-pescoco"      class="pulse-dot bz" data-label="Pescoço"      cx="500" cy="240" r="22"/>
+        <circle id="bz-ombro_esq"   class="pulse-dot bz" data-label="Ombro Esq."   cx="380" cy="280" r="22"/>
+        <circle id="bz-ombro_dir"   class="pulse-dot bz" data-label="Ombro Dir."   cx="620" cy="280" r="22"/>
+        <circle id="bz-torax_esq"   class="pulse-dot bz" data-label="Tórax Esq."   cx="430" cy="380" r="22"/>
+        <circle id="bz-torax_dir"   class="pulse-dot bz" data-label="Tórax Dir."   cx="570" cy="380" r="22"/>
+        <circle id="bz-abdomen_sup" class="pulse-dot bz" data-label="Abdômen Sup." cx="500" cy="460" r="22"/>
+        <circle id="bz-abdomen_inf" class="pulse-dot bz" data-label="Abdômen Inf." cx="500" cy="550" r="22"/>
+        <circle id="bz-braco_esq"   class="pulse-dot bz" data-label="Braço Esq."   cx="330" cy="420" r="22"/>
+        <circle id="bz-braco_dir"   class="pulse-dot bz" data-label="Braço Dir."   cx="670" cy="420" r="22"/>
+        <circle id="bz-antebraco_esq" class="pulse-dot bz" data-label="Antebraço Esq." cx="280" cy="550" r="22"/>
+        <circle id="bz-antebraco_dir" class="pulse-dot bz" data-label="Antebraço Dir." cx="720" cy="550" r="22"/>
+        <circle id="bz-quadril_esq" class="pulse-dot bz" data-label="Quadril Esq." cx="440" cy="590" r="22"/>
+        <circle id="bz-quadril_dir" class="pulse-dot bz" data-label="Quadril Dir." cx="560" cy="590" r="22"/>
+        <circle id="bz-coxa_esq"    class="pulse-dot bz" data-label="Coxa Esq."    cx="420" cy="700" r="22"/>
+        <circle id="bz-coxa_dir"    class="pulse-dot bz" data-label="Coxa Dir."    cx="580" cy="700" r="22"/>
+        <circle id="bz-joelho_esq"  class="pulse-dot bz" data-label="Joelho Esq."  cx="420" cy="800" r="22"/>
+        <circle id="bz-joelho_dir"  class="pulse-dot bz" data-label="Joelho Dir."  cx="580" cy="800" r="22"/>
+        <circle id="bz-perna_esq"   class="pulse-dot bz" data-label="Perna Esq."   cx="420" cy="900" r="22"/>
+        <circle id="bz-perna_dir"   class="pulse-dot bz" data-label="Perna Dir."   cx="580" cy="900" r="22"/>
+
+      </svg>
+
+    </div>
+
+    <div class="bodymap-info-panel">
+      <div>
+        <div class="section-title">Regiões Dolorosas</div>
+        <div id="zonesList" class="zones-list">
+          <span style="font-size:0.76rem;color:var(--text-faint);font-style:italic;">Nenhuma região registrada</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Sintomas Relatados</div>
+        {% if atendimento.sintomas %}
+        <div class="field-value">{{ atendimento.sintomas }}</div>
+        {% else %}
+        <div class="field-empty">Não registrado</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Anamnese + Diagnóstico -->
+  <div class="clinical-grid" style="margin-bottom:16px;">
+    <div class="bento-card reveal" style="padding:22px 24px;">
+      <div class="section-title">Anamnese</div>
+      {% if atendimento.anamnese %}
+      <div class="field-value">{{ atendimento.anamnese }}</div>
+      {% else %}
+      <div class="field-empty">Não registrado</div>
+      {% endif %}
+    </div>
+    <div class="bento-card reveal" style="padding:22px 24px;">
+      <div class="section-title">Diagnóstico</div>
+      {% if atendimento.diagnostico %}
+      <div class="field-value">{{ atendimento.diagnostico }}</div>
+      {% else %}
+      <div class="field-empty">Não registrado</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Resultado de Exames + Prescrição -->
+  <div class="clinical-grid" style="margin-bottom:16px;">
+    <div class="bento-card reveal" style="padding:22px 24px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div style="width:22px;height:22px;border-radius:6px;background:var(--info-bg);border:1px solid var(--info-bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+          </svg>
+        </div>
+        <div class="section-title" style="margin-bottom:0;">Resultado de Exames</div>
+      </div>
+      {% if atendimento.resultado_exame %}
+      <div class="field-value">{{ atendimento.resultado_exame }}</div>
+      {% else %}
+      <div class="field-empty">Não registrado</div>
+      {% endif %}
+    </div>
+    <div class="bento-card reveal" style="padding:22px 24px;">
+      <div class="section-title">Prescrição</div>
+      {% if atendimento.prescricao %}
+      <div class="field-value">{{ atendimento.prescricao }}</div>
+      {% else %}
+      <div class="field-empty">Não registrado</div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  const ZONE_LABELS = {
+    'cabeca': 'Cabeça', 'pescoco': 'Pescoço',
+    'ombro_esq': 'Ombro Esq.', 'ombro_dir': 'Ombro Dir.',
+    'torax_esq': 'Tórax Esq.', 'torax_dir': 'Tórax Dir.',
+    'abdomen_sup': 'Abdômen Sup.', 'abdomen_inf': 'Abdômen Inf.',
+    'braco_esq': 'Braço Esq.', 'braco_dir': 'Braço Dir.',
+    'antebraco_esq': 'Antebraço Esq.', 'antebraco_dir': 'Antebraço Dir.',
+    'quadril_esq': 'Quadril Esq.', 'quadril_dir': 'Quadril Dir.',
+    'coxa_esq': 'Coxa Esq.', 'coxa_dir': 'Coxa Dir.',
+    'joelho_esq': 'Joelho Esq.', 'joelho_dir': 'Joelho Dir.',
+    'perna_esq': 'Perna Esq.', 'perna_dir': 'Perna Dir.',
+  };
+
+  let locais = [];
+  try { locais = JSON.parse('{{ atendimento.locais_dor|escapejs }}') || []; } catch(e) {}
+
+  if (locais.length === 0) return;
+
+  const list = document.getElementById('zonesList');
+  list.innerHTML = '';
+
+  locais.forEach(id => {
+    const label = ZONE_LABELS[id] || id;
+    const el = document.getElementById('bz-' + id);
+    if (el) el.classList.add('selected');
+
+    const pill = document.createElement('span');
+    pill.className = 'zone-pill';
+    pill.innerHTML = '<span class="zone-pill-dot"></span>' + label;
+    list.appendChild(pill);
+  });
+})();
+</script>
+{% endblock %}
