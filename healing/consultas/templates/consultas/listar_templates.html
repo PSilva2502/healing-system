@@ -1,0 +1,49 @@
+{% extends 'core/base.html' %}
+{% block titulo %}Templates Clínicos{% endblock %}
+
+{% block conteudo %}
+<div style="max-width:900px;margin:0 auto;">
+  <div class="futuristic-header reveal d-1" style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="f-title">Templates Clínicos por Especialidade</div>
+    <a href="{% url 'criar_template' %}" class="btn-primary">+ Novo Template</a>
+  </div>
+
+  <div style="margin-bottom:18px;padding:14px 18px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent-border);font-size:0.82rem;color:var(--text-secondary);">
+    Cada template define os campos do prontuário que aparecem automaticamente quando um médico da especialidade registra um atendimento.
+  </div>
+
+  <div class="bento-card reveal" style="padding:0;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);">
+          <th style="padding:14px 20px;">Especialidade</th>
+          <th style="padding:14px 20px;">Campos</th>
+          <th style="padding:14px 20px;">Status</th>
+          <th style="padding:14px 20px;text-align:right;">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in templates %}
+        <tr style="border-top:1px solid var(--border);font-size:0.9rem;">
+          <td style="padding:14px 20px;font-weight:600;">{{ t.especialidade }}</td>
+          <td style="padding:14px 20px;color:var(--text-muted);">{{ t.campos_extras|length }} campo{{ t.campos_extras|length|pluralize }}</td>
+          <td style="padding:14px 20px;">
+            {% if t.ativo %}<span style="color:var(--success);">● Ativo</span>
+            {% else %}<span style="color:var(--text-muted);">○ Inativo</span>{% endif %}
+          </td>
+          <td style="padding:14px 20px;text-align:right;white-space:nowrap;">
+            <a href="{% url 'editar_template' t.pk %}" class="btn-secondary" style="padding:6px 14px;font-size:0.8rem;">Editar</a>
+            <form method="post" action="{% url 'excluir_template' t.pk %}" style="display:inline;" onsubmit="return confirm('Excluir o template de {{ t.especialidade }}?');">
+              {% csrf_token %}
+              <button type="submit" class="btn-danger" style="padding:6px 14px;font-size:0.8rem;">Excluir</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="padding:30px;text-align:center;color:var(--text-muted);">Nenhum template cadastrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

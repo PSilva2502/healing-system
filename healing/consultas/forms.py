@@ -1,8 +1,8 @@
 import json
 from datetime import date
 from django import forms
-from consultas.models import Consulta, Atendimento, TipoConsulta
-from medicos.models import Medico
+from consultas.models import Consulta, Atendimento, TipoConsulta, TemplateEspecialidade
+from medicos.models import Medico, ESPECIALIDADES
 from pacientes.models import Paciente
 
 
@@ -161,6 +161,36 @@ class FormularioTipoConsulta(forms.ModelForm):
                 self.fields['campos'].initial = '\n'.join(
                     c.get('label', '') for c in inst.campos_extras
                 )
+
+    def campos_lista(self):
+        raw = self.cleaned_data.get('campos', '') or ''
+        labels = [l.strip() for l in raw.splitlines() if l.strip()]
+        return [{'label': l, 'tipo': 'text'} for l in labels]
+
+
+class FormularioTemplateEspecialidade(forms.ModelForm):
+    campos = forms.CharField(
+        label='Campos do Prontuário (um por linha)', required=False,
+        widget=forms.Textarea(attrs={'class': 'form-textarea', 'rows': 8,
+            'placeholder': 'Pressão Arterial\nFrequência Cardíaca\nResultado ECG\nAusculta'}),
+        help_text='Cada linha vira um campo no atendimento de médicos desta especialidade.',
+    )
+
+    class Meta:
+        model = TemplateEspecialidade
+        fields = ['especialidade', 'ativo']
+        labels = {'especialidade': 'Especialidade', 'ativo': 'Ativo'}
+        widgets = {
+            'especialidade': forms.Select(attrs={'class': 'form-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        inst = self.instance
+        if inst and inst.pk and inst.campos_extras:
+            self.fields['campos'].initial = '\n'.join(
+                c.get('label', '') for c in inst.campos_extras
+            )
 
     def campos_lista(self):
         raw = self.cleaned_data.get('campos', '') or ''

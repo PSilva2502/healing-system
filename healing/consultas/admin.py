@@ -1,5 +1,13 @@
 from django.contrib import admin
-from consultas.models import Consulta, Atendimento, TipoConsulta, TabelaValor
+from consultas.models import (
+    Consulta, Atendimento, TipoConsulta, TabelaValor, TemplateEspecialidade,
+)
+
+
+@admin.register(TemplateEspecialidade)
+class TemplateEspecialidadeAdmin(admin.ModelAdmin):
+    list_display = ['especialidade', 'ativo']
+    list_filter = ['ativo']
 
 
 @admin.register(TipoConsulta)

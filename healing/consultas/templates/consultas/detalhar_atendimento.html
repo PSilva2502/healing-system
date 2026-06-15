@@ -316,7 +316,7 @@
   {% if consulta.dados_extras %}
   <!-- Avaliação específica do tipo de consulta -->
   <div class="bento-card reveal" style="padding:22px 24px;margin-bottom:16px;">
-    <div class="section-title">{{ consulta.tipo_consulta.nome }} — Avaliação Específica</div>
+    <div class="section-title">{{ consulta.medico.especialidade }} — Avaliação Específica</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;">
       {% for label, valor in consulta.dados_extras.items %}
       <div>

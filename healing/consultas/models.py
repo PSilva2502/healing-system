@@ -1,6 +1,23 @@
 from django.db import models
 from pacientes.models import Paciente
-from medicos.models import Medico
+from medicos.models import Medico, ESPECIALIDADES
+
+
+class TemplateEspecialidade(models.Model):
+    especialidade = models.CharField(max_length=100, choices=ESPECIALIDADES, unique=True,
+                      verbose_name='Especialidade')
+    campos_extras = models.JSONField(default=list, blank=True,
+                      verbose_name='Campos do prontuário')
+    ativo         = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'template_especialidade'
+        verbose_name = 'Template por Especialidade'
+        verbose_name_plural = 'Templates por Especialidade'
+        ordering = ['especialidade']
+
+    def __str__(self):
+        return f'Template — {self.especialidade}'
 
 
 class TipoConsulta(models.Model):

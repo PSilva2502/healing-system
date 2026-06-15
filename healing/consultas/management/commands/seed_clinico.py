@@ -1,6 +1,15 @@
 from django.core.management.base import BaseCommand
-from consultas.models import TipoConsulta, TabelaValor
+from consultas.models import TipoConsulta, TabelaValor, TemplateEspecialidade
 from pacientes.models import Convenio
+
+
+TEMPLATES = [
+    ('Cardiologia', ['Pressão Arterial', 'Frequência Cardíaca', 'Resultado ECG', 'Ausculta', 'Risco Cardiovascular']),
+    ('Dermatologia', ['Tipo de Lesão', 'Região Afetada', 'Dermatoscopia']),
+    ('Ortopedia', ['Articulação Afetada', 'Amplitude de Movimento', 'Resultado Raio-X']),
+    ('Pediatria', ['Peso (kg)', 'Altura (cm)', 'Perímetro Cefálico', 'Vacinação em dia']),
+    ('Clínica Geral', ['Pressão Arterial', 'Peso (kg)', 'Temperatura']),
+]
 
 
 CONVENIOS = [
@@ -48,5 +57,15 @@ class Command(BaseCommand):
                 tipo_consulta=t, defaults={'valor_base': valor},
             )
             self.stdout.write(f'{"+" if criado else "·"} Tipo: {t.nome} — R$ {valor} ({len(campos)} campos)')
+
+        for esp, campos in TEMPLATES:
+            campos_extras = [{'label': l, 'tipo': 'text'} for l in campos]
+            tpl, criado = TemplateEspecialidade.objects.get_or_create(
+                especialidade=esp, defaults={'campos_extras': campos_extras},
+            )
+            if not criado:
+                tpl.campos_extras = campos_extras
+                tpl.save()
+            self.stdout.write(f'{"+" if criado else "·"} Template: {esp} ({len(campos)} campos)')
 
         self.stdout.write(self.style.SUCCESS('Seed clínico concluído.'))

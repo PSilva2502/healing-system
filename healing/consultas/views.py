@@ -8,10 +8,12 @@ from django.utils.decorators import method_decorator
 from django.core.exceptions import PermissionDenied
 from core.decorators import exige_perfil
 from core.auditoria import registrar_auditoria
-from consultas.models import Consulta, Atendimento, TipoConsulta, TabelaValor
+from consultas.models import (
+    Consulta, Atendimento, TipoConsulta, TabelaValor, TemplateEspecialidade,
+)
 from consultas.forms import (
     FormularioAgendamento, FormularioAgendamentoAdmin, FormularioAtendimento,
-    FormularioEdicaoConsulta, FormularioTipoConsulta,
+    FormularioEdicaoConsulta, FormularioTipoConsulta, FormularioTemplateEspecialidade,
 )
 
 
@@ -88,6 +90,73 @@ class ExcluirTipoConsultaView(LoginRequiredMixin, View):
         tipo.delete()
         messages.success(request, 'Tipo de consulta excluído com sucesso.')
         return redirect('listar_tipos_consulta')
+
+
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class ListarTemplatesView(LoginRequiredMixin, TemplateView):
+    template_name = 'consultas/listar_templates.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['templates'] = TemplateEspecialidade.objects.all().order_by('especialidade')
+        return ctx
+
+
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class CriarTemplateView(LoginRequiredMixin, View):
+    template_name = 'consultas/form_template.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {
+            'form': FormularioTemplateEspecialidade(), 'titulo': 'Novo Template',
+        })
+
+    def post(self, request):
+        form = FormularioTemplateEspecialidade(request.POST)
+        if form.is_valid():
+            tpl = form.save(commit=False)
+            tpl.campos_extras = form.campos_lista()
+            tpl.save()
+            registrar_auditoria('template_especialidade', 'INSERT')
+            messages.success(request, 'Template criado com sucesso!')
+            return redirect('listar_templates')
+        return render(request, self.template_name, {'form': form, 'titulo': 'Novo Template'})
+
+
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class EditarTemplateView(LoginRequiredMixin, View):
+    template_name = 'consultas/form_template.html'
+
+    def get(self, request, pk):
+        tpl = get_object_or_404(TemplateEspecialidade, pk=pk)
+        return render(request, self.template_name, {
+            'form': FormularioTemplateEspecialidade(instance=tpl),
+            'tpl': tpl, 'titulo': 'Editar Template',
+        })
+
+    def post(self, request, pk):
+        tpl = get_object_or_404(TemplateEspecialidade, pk=pk)
+        form = FormularioTemplateEspecialidade(request.POST, instance=tpl)
+        if form.is_valid():
+            tpl = form.save(commit=False)
+            tpl.campos_extras = form.campos_lista()
+            tpl.save()
+            registrar_auditoria('template_especialidade', 'UPDATE')
+            messages.success(request, 'Template atualizado com sucesso!')
+            return redirect('listar_templates')
+        return render(request, self.template_name, {
+            'form': form, 'tpl': tpl, 'titulo': 'Editar Template',
+        })
+
+
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class ExcluirTemplateView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        tpl = get_object_or_404(TemplateEspecialidade, pk=pk)
+        registrar_auditoria('template_especialidade', 'DELETE', {'esp': tpl.especialidade})
+        tpl.delete()
+        messages.success(request, 'Template excluído com sucesso.')
+        return redirect('listar_templates')
 
 
 class ListarConsultasView(LoginRequiredMixin, TemplateView):
@@ -197,12 +266,24 @@ class RegistrarAtendimentoView(LoginRequiredMixin, View):
         return render(request, self.template_name, {
             'form': form, 'consulta': consulta,
             'campos_extras': self._campos_extras(consulta),
+            'titulo_template': self._titulo_template(consulta),
         })
 
     def _campos_extras(self, consulta):
+        # Template clínico automático pela especialidade do médico
+        esp = consulta.medico.especialidade
+        tpl = TemplateEspecialidade.objects.filter(
+            especialidade=esp, ativo=True,
+        ).first()
+        if tpl and tpl.campos_extras:
+            return tpl.campos_extras
+        # Fallback: campos do tipo de consulta (se houver)
         if consulta.tipo_consulta:
             return consulta.tipo_consulta.campos_extras or []
         return []
+
+    def _titulo_template(self, consulta):
+        return consulta.medico.especialidade
 
     def post(self, request, pk):
         consulta = get_object_or_404(Consulta, pk=pk)
@@ -229,6 +310,7 @@ class RegistrarAtendimentoView(LoginRequiredMixin, View):
         return render(request, self.template_name, {
             'form': form, 'consulta': consulta,
             'campos_extras': self._campos_extras(consulta),
+            'titulo_template': self._titulo_template(consulta),
         })
 
 
