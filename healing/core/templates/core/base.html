@@ -22,6 +22,7 @@
         <a href="{% url 'listar_consultas' %}" class="nav-item {% if 'consultas' in request.path or 'atendimentos' in request.path %}active{% endif %}">Consultas</a>
         <a href="{% url 'listar_pacientes' %}" class="nav-item {% if 'pacientes' in request.path %}active{% endif %}">Pacientes</a>
         <a href="{% url 'listar_medicos' %}" class="nav-item {% if 'medicos' in request.path %}active{% endif %}">Equipe</a>
+        <a href="{% url 'listar_usuarios' %}" class="nav-item {% if 'usuarios' in request.path %}active{% endif %}">Usuários</a>
         <a href="{% url 'listar_tipos_consulta' %}" class="nav-item {% if 'tipos-consulta' in request.path %}active{% endif %}">Tipos</a>
         <a href="{% url 'listar_templates' %}" class="nav-item {% if '/templates' in request.path %}active{% endif %}">Templates</a>
         <a href="{% url 'listar_convenios' %}" class="nav-item {% if 'convenios' in request.path %}active{% endif %}">Convênios</a>

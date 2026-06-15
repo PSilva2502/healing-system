@@ -159,6 +159,19 @@ class ExcluirPacienteView(LoginRequiredMixin, View):
         return redirect('listar_pacientes')
 
 
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class AnonimizarPacienteView(LoginRequiredMixin, View):
+    """LGPD art. 18 — exclusão/anonimização definitiva dos dados pessoais."""
+    def post(self, request, pk):
+        paciente = get_object_or_404(Paciente, pk=pk)
+        registrar_auditoria('paciente', 'DELETE', {
+            'id': paciente.pk, 'acao': 'anonimizacao_lgpd',
+        })
+        paciente.anonimizar()
+        messages.success(request, 'Dados do paciente anonimizados (LGPD art. 18).')
+        return redirect('listar_pacientes')
+
+
 @method_decorator(exige_perfil('admin', 'medico', 'recepcionista'), name='dispatch')
 class DetalharPacienteView(LoginRequiredMixin, TemplateView):
     template_name = 'pacientes/detalhar_paciente.html'

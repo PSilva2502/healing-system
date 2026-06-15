@@ -26,6 +26,12 @@ class Paciente(models.Model):
     data_nascimento = models.DateField()
     convenio        = models.ForeignKey(Convenio, null=True, blank=True,
                         on_delete=models.SET_NULL, verbose_name='Convênio')
+    # LGPD — consentimento do titular (art. 7/8)
+    consentimento_lgpd = models.BooleanField(default=False,
+                          verbose_name='Consentimento LGPD')
+    consentimento_em   = models.DateTimeField(null=True, blank=True,
+                          verbose_name='Data do consentimento')
+    anonimizado     = models.BooleanField(default=False, verbose_name='Dados anonimizados')
     ativo           = models.BooleanField(default=True)
 
     class Meta:
@@ -57,3 +63,22 @@ class Paciente(models.Model):
         if len(c) == 11:
             return f'***.{c[3:6]}.{c[6:9]}-**'
         return c
+
+    def anonimizar(self):
+        """LGPD art. 18 — direito ao esquecimento.
+
+        Remove os dados pessoais identificáveis (PII) mantendo o registro
+        para integridade do histórico clínico/estatístico.
+        """
+        from django.utils import timezone
+        marca = f'ANON-{self.pk}'
+        self.nome = 'Paciente'
+        self.sobrenome = 'Anonimizado'
+        self.email = ''
+        self.cpf = f'{marca:0<11}'[:11]
+        self.telefone = ''
+        self.consentimento_lgpd = False
+        self.consentimento_em = None
+        self.anonimizado = True
+        self.ativo = False
+        self.save()

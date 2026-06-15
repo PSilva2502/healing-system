@@ -18,9 +18,16 @@ class FormularioConvenio(forms.ModelForm):
 
 
 class FormularioPaciente(forms.ModelForm):
+    consentimento_lgpd = forms.BooleanField(
+        required=True,
+        label='O paciente autoriza o tratamento dos seus dados pessoais e de saúde, '
+              'conforme a LGPD (Lei 13.709/2018), para fins de atendimento clínico.',
+    )
+
     class Meta:
         model = Paciente
-        fields = ['nome', 'sobrenome', 'email', 'cpf', 'telefone', 'data_nascimento', 'convenio']
+        fields = ['nome', 'sobrenome', 'email', 'cpf', 'telefone', 'data_nascimento',
+                  'convenio', 'consentimento_lgpd']
         labels = {
             'nome': 'Nome',
             'sobrenome': 'Sobrenome',
@@ -44,6 +51,15 @@ class FormularioPaciente(forms.ModelForm):
         self.fields['convenio'].empty_label = 'Particular (sem convênio)'
         self.fields['convenio'].required = False
         self.fields['convenio'].widget.attrs['class'] = 'form-input'
+
+    def save(self, commit=True):
+        from django.utils import timezone
+        paciente = super().save(commit=False)
+        if self.cleaned_data.get('consentimento_lgpd') and not paciente.consentimento_em:
+            paciente.consentimento_em = timezone.now()
+        if commit:
+            paciente.save()
+        return paciente
 
     def clean_cpf(self):
         cpf = self.cleaned_data.get('cpf', '').strip().replace('.', '').replace('-', '')

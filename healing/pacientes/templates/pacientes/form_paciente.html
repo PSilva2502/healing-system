@@ -70,6 +70,15 @@
         {% if form.convenio.errors %}<div class="form-error">{{ form.convenio.errors.0 }}</div>{% endif %}
       </div>
 
+      <div style="margin:18px 0;padding:14px 16px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent-border);">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:0.82rem;color:var(--text-secondary);line-height:1.5;">
+          <input type="checkbox" name="consentimento_lgpd" style="margin-top:3px;flex-shrink:0;"
+                 {% if form.consentimento_lgpd.value %}checked{% endif %}>
+          <span>O paciente autoriza o tratamento dos seus dados pessoais e de saúde, conforme a <strong>LGPD (Lei 13.709/2018)</strong>, para fins de atendimento clínico.</span>
+        </label>
+        {% if form.consentimento_lgpd.errors %}<div class="form-error" style="margin-top:8px;">{{ form.consentimento_lgpd.errors.0 }}</div>{% endif %}
+      </div>
+
       {% if form.non_field_errors %}
       <div class="form-error" style="margin-bottom:16px;">{{ form.non_field_errors.0 }}</div>
       {% endif %}

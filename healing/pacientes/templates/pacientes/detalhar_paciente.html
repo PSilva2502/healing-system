@@ -40,16 +40,34 @@
         <span style="font-size:0.85rem;font-weight:600;color:var(--text-primary);">{{ paciente.data_nascimento|date:"d/m/Y" }}</span>
       </div>
       {% if paciente.email %}
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-l);">
         <span style="font-size:0.75rem;color:var(--text-muted);">E-mail</span>
         <span style="font-size:0.8rem;color:var(--text-secondary);">{{ paciente.email }}</span>
       </div>
       {% endif %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
+        <span style="font-size:0.75rem;color:var(--text-muted);">Consentimento LGPD</span>
+        {% if paciente.consentimento_lgpd %}
+        <span style="font-size:0.8rem;font-weight:600;color:var(--success);">● Autorizado{% if paciente.consentimento_em %} · {{ paciente.consentimento_em|date:"d/m/Y" }}{% endif %}</span>
+        {% else %}
+        <span style="font-size:0.8rem;font-weight:600;color:var(--warning);">○ Não registrado</span>
+        {% endif %}
+      </div>
     </div>
     {% if user.perfil == 'admin' or user.perfil == 'recepcionista' %}
     <a href="{% url 'agendar_consulta' %}" class="btn-primary" style="width:100%;justify-content:center;margin-top:20px;">
       Agendar Consulta
     </a>
+    {% endif %}
+    {% if user.perfil == 'admin' and not paciente.anonimizado %}
+    <form method="post" action="{% url 'anonimizar_paciente' paciente.pk %}"
+          onsubmit="return confirm('Anonimizar definitivamente os dados deste paciente? Esta ação é irreversível (LGPD art. 18).');"
+          style="margin-top:10px;">
+      {% csrf_token %}
+      <button type="submit" class="btn-danger" style="width:100%;justify-content:center;">
+        Anonimizar dados (LGPD)
+      </button>
+    </form>
     {% endif %}
   </div>
 

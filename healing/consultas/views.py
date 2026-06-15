@@ -324,6 +324,12 @@ class DetalharAtendimentoView(LoginRequiredMixin, View):
         if not hasattr(consulta, 'atendimento'):
             messages.error(request, 'Esta consulta não possui atendimento registrado.')
             return redirect('listar_consultas')
+        # LGPD — registra acesso de LEITURA a dado sensível de saúde (prontuário)
+        registrar_auditoria('atendimento', 'SELECT', {
+            'consulta': consulta.pk,
+            'paciente': str(consulta.paciente),
+            'acao': 'leitura_prontuario',
+        })
         return render(request, self.template_name, {
             'consulta': consulta,
             'atendimento': consulta.atendimento,

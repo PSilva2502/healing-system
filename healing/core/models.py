@@ -32,6 +32,7 @@ class Auditoria(models.Model):
         ('INSERT', 'Inserção'),
         ('UPDATE', 'Atualização'),
         ('DELETE', 'Exclusão'),
+        ('SELECT', 'Leitura'),
     ]
     usuario = models.ForeignKey(
         Usuario, on_delete=models.SET_NULL, null=True, related_name='auditorias'

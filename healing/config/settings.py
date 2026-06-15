@@ -6,7 +6,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='healing-dev-key-insegura-troque-em-producao')
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = ['*']
+
+# Em produção defina ALLOWED_HOSTS via .env (lista separada por vírgula).
+# Ex: ALLOWED_HOSTS=clinica.com.br,www.clinica.com.br
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='*' if DEBUG else 'localhost,127.0.0.1',
+    cast=lambda v: [h.strip() for h in v.split(',') if h.strip()],
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -90,3 +97,27 @@ LOGIN_REDIRECT_URL = '/painel/'
 LOGOUT_REDIRECT_URL = '/entrar/'
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
+
+# ── Segurança / LGPD (art. 46) ──────────────────────────────
+# Hardening básico. Em desenvolvimento (DEBUG=True) fica relaxado;
+# com DEBUG=False (produção) força HTTPS, cookies seguros e HSTS.
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+X_FRAME_OPTIONS = 'DENY'
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Sessão expira ao fechar o navegador + timeout de inatividade (30 min)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 60 * 30
+SESSION_SAVE_EVERY_REQUEST = True
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 ano
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
