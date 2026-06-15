@@ -63,6 +63,16 @@ class EditarConvenioView(LoginRequiredMixin, View):
         })
 
 
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class ExcluirConvenioView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        convenio = get_object_or_404(Convenio, pk=pk)
+        registrar_auditoria('convenio', 'DELETE', {'nome': convenio.nome})
+        convenio.delete()
+        messages.success(request, 'Convênio excluído com sucesso.')
+        return redirect('listar_convenios')
+
+
 @method_decorator(exige_perfil('admin', 'medico', 'recepcionista'), name='dispatch')
 class ListarPacientesView(LoginRequiredMixin, TemplateView):
     template_name = 'pacientes/listar_pacientes.html'

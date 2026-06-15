@@ -27,8 +27,12 @@
             {% if c.ativo %}<span style="color:var(--success);">● Ativo</span>
             {% else %}<span style="color:var(--text-muted);">○ Inativo</span>{% endif %}
           </td>
-          <td style="padding:14px 20px;text-align:right;">
+          <td style="padding:14px 20px;text-align:right;white-space:nowrap;">
             <a href="{% url 'editar_convenio' c.pk %}" class="btn-secondary" style="padding:6px 14px;font-size:0.8rem;">Editar</a>
+            <form method="post" action="{% url 'excluir_convenio' c.pk %}" style="display:inline;" onsubmit="return confirm('Excluir o convênio {{ c.nome }}?');">
+              {% csrf_token %}
+              <button type="submit" class="btn-danger" style="padding:6px 14px;font-size:0.8rem;">Excluir</button>
+            </form>
           </td>
         </tr>
         {% empty %}

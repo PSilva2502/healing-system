@@ -104,4 +104,61 @@
     </a>
   </div>
 </div>
+
+<!-- ── Financeiro ──────────────────────────────────── -->
+<div class="futuristic-header reveal" style="margin-top:36px;">
+  <div class="f-title" style="font-size:1.2rem;">Financeiro</div>
+</div>
+
+<div class="grid-stats-4 reveal" style="margin-bottom:28px;grid-template-columns:repeat(3,1fr);">
+  <div class="stat-card green">
+    <div class="stat-label" style="margin-bottom:6px;">Receita Realizada</div>
+    <div class="stat-value" style="color:var(--success);font-size:1.8rem;">R$ {{ receita_total|floatformat:2 }}</div>
+    <div class="stat-label" style="margin-top:4px;">consultas realizadas</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label" style="margin-bottom:6px;">Receita Prevista</div>
+    <div class="stat-value" style="color:var(--accent);font-size:1.8rem;">R$ {{ receita_prevista|floatformat:2 }}</div>
+    <div class="stat-label" style="margin-top:4px;">consultas agendadas</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-label" style="margin-bottom:6px;">Receita do Mês</div>
+    <div class="stat-value" style="color:var(--warning);font-size:1.8rem;">R$ {{ receita_mes|floatformat:2 }}</div>
+    <div class="stat-label" style="margin-top:4px;">realizado este mês</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;" class="reveal">
+  <!-- Receita por Médico -->
+  <div class="bento-card" style="padding:24px;">
+    <div style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Receita por Médico</div>
+    {% for r in receita_por_medico %}
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:0.86rem;font-weight:600;">Dr(a). {{ r.medico__usuario__first_name }} {{ r.medico__usuario__last_name }}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);">{{ r.qtd }} atendimento{{ r.qtd|pluralize }}</div>
+      </div>
+      <div style="font-size:0.95rem;font-weight:700;color:var(--success);">R$ {{ r.total|floatformat:2 }}</div>
+    </div>
+    {% empty %}
+    <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.85rem;">Sem receita registrada</div>
+    {% endfor %}
+  </div>
+
+  <!-- Receita por Especialidade -->
+  <div class="bento-card" style="padding:24px;">
+    <div style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Receita por Especialidade</div>
+    {% for r in receita_por_especialidade %}
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:0.86rem;font-weight:600;">{{ r.medico__especialidade|default:'—' }}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);">{{ r.qtd }} atendimento{{ r.qtd|pluralize }}</div>
+      </div>
+      <div style="font-size:0.95rem;font-weight:700;color:var(--accent);">R$ {{ r.total|floatformat:2 }}</div>
+    </div>
+    {% empty %}
+    <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.85rem;">Sem receita registrada</div>
+    {% endfor %}
+  </div>
+</div>
 {% endblock %}

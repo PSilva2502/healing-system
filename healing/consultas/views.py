@@ -80,6 +80,16 @@ class EditarTipoConsultaView(LoginRequiredMixin, View):
         })
 
 
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class ExcluirTipoConsultaView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        tipo = get_object_or_404(TipoConsulta, pk=pk)
+        registrar_auditoria('tipo_consulta', 'DELETE', {'nome': tipo.nome})
+        tipo.delete()
+        messages.success(request, 'Tipo de consulta excluído com sucesso.')
+        return redirect('listar_tipos_consulta')
+
+
 class ListarConsultasView(LoginRequiredMixin, TemplateView):
     template_name = 'consultas/listar_consultas.html'
 

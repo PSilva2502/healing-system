@@ -876,6 +876,16 @@ body.dark .wf-card:hover { box-shadow: 0 2px 10px rgba(101, 132, 115, 0.14); }
         <div class="wf-card-body">
           <div class="wf-card-patient">{{ consulta.paciente.nome_completo }}</div>
           <div class="wf-card-doctor">Dr(a). {{ consulta.medico.usuario.get_full_name }} · {{ consulta.medico.especialidade }}</div>
+          {% if consulta.tipo_consulta or consulta.valor_final %}
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;">
+            {% if consulta.tipo_consulta %}
+            <span style="font-size:0.72rem;font-weight:600;padding:2px 9px;border-radius:100px;background:var(--accent-soft);color:var(--accent);">{{ consulta.tipo_consulta.nome }}</span>
+            {% endif %}
+            {% if consulta.valor_final %}
+            <span style="font-size:0.78rem;font-weight:700;color:var(--success);">R$ {{ consulta.valor_final|floatformat:2 }}</span>
+            {% endif %}
+          </div>
+          {% endif %}
           {% if consulta.observacoes %}
           <div class="wf-card-obs">{{ consulta.observacoes|truncatechars:72 }}</div>
           {% endif %}

@@ -127,7 +127,6 @@ button { font-family: inherit; }
   text-decoration: none;
   color: var(--bg-base);
 }
-body.dark .btn-primary { background: var(--text-primary); color: var(--bg-base); }
 
 .btn-secondary {
   background: var(--surface);
@@ -229,7 +228,6 @@ body.dark .btn-primary { background: var(--text-primary); color: var(--bg-base);
   border: 1px solid rgba(37, 99, 235, 0.25);
   flex-shrink: 0;
 }
-body.dark .nav-profile { border-color: rgba(59, 130, 246, 0.30); }
 
 /* ── Layout principal ───────────────────── */
 .app-main {
@@ -259,9 +257,6 @@ body.dark .nav-profile { border-color: rgba(59, 130, 246, 0.30); }
   background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 100%);
   opacity: 0.5;
   pointer-events: none;
-}
-body.dark .bento-card::before {
-  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 100%);
 }
 .bento-card:hover {
   transform: translateY(-3px);
@@ -373,7 +368,6 @@ textarea.form-input, .form-textarea { resize: vertical; min-height: 100px; line-
 }
 .f-list-row:last-child { border-bottom: none; }
 .f-list-row:hover { background: rgba(255,255,255,0.30); }
-body.dark .f-list-row:hover { background: rgba(255,255,255,0.04); }
 
 /* ── Badges ─────────────────────────────── */
 .badge {
@@ -414,12 +408,6 @@ body.dark .f-list-row:hover { background: rgba(255,255,255,0.04); }
   --danger-bd:     rgba(220, 38, 38, 0.22);
   --warning-bd:    rgba(217, 119, 6, 0.22);
   --success-bd:    rgba(5, 150, 105, 0.22);
-}
-body.dark {
-  --text-faint:  rgba(196, 166, 140, 0.35);
-  --border-l:    rgba(255, 255, 255, 0.04);
-  --n-50:        rgba(30, 20, 14, 0.80);
-  --n-100:       rgba(50, 35, 22, 0.80);
 }
 
 /* ── Page header (alias de futuristic-header) ── */
@@ -497,7 +485,6 @@ body.dark {
 }
 .data-table tbody tr:last-child td { border-bottom: none; }
 .data-table tbody tr:hover { background: rgba(255, 255, 255, 0.30); }
-body.dark .data-table tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
 
 /* ── Avatar de usuário ──────────────────── */
 .user-avatar {

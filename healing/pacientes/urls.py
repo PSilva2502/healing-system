@@ -2,7 +2,7 @@ from django.urls import path
 from pacientes.views import (
     ListarPacientesView, CriarPacienteView, EditarPacienteView,
     ExcluirPacienteView, DetalharPacienteView,
-    ListarConveniosView, CriarConvenioView, EditarConvenioView,
+    ListarConveniosView, CriarConvenioView, EditarConvenioView, ExcluirConvenioView,
 )
 
 urlpatterns = [
@@ -14,4 +14,5 @@ urlpatterns = [
     path('convenios/', ListarConveniosView.as_view(), name='listar_convenios'),
     path('convenios/novo/', CriarConvenioView.as_view(), name='criar_convenio'),
     path('convenios/<int:pk>/editar/', EditarConvenioView.as_view(), name='editar_convenio'),
+    path('convenios/<int:pk>/excluir/', ExcluirConvenioView.as_view(), name='excluir_convenio'),
 ]

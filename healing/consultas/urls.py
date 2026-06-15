@@ -3,6 +3,7 @@ from consultas.views import (
     ListarConsultasView, AgendarConsultaView, CancelarConsultaView,
     RegistrarAtendimentoView, DetalharAtendimentoView, EditarConsultaView,
     ListarTiposConsultaView, CriarTipoConsultaView, EditarTipoConsultaView,
+    ExcluirTipoConsultaView,
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path('tipos-consulta/', ListarTiposConsultaView.as_view(), name='listar_tipos_consulta'),
     path('tipos-consulta/novo/', CriarTipoConsultaView.as_view(), name='criar_tipo_consulta'),
     path('tipos-consulta/<int:pk>/editar/', EditarTipoConsultaView.as_view(), name='editar_tipo_consulta'),
+    path('tipos-consulta/<int:pk>/excluir/', ExcluirTipoConsultaView.as_view(), name='excluir_tipo_consulta'),
 ]

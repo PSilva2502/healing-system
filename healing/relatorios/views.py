@@ -1,5 +1,6 @@
 from datetime import date
 from django.shortcuts import render
+from django.db.models import Sum, Count
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.utils.decorators import method_decorator
@@ -28,6 +29,31 @@ class RelatoriosView(LoginRequiredMixin, TemplateView):
             data_consulta__month=hoje.month,
             data_consulta__year=hoje.year,
         ).count()
+
+        # ── Financeiro ──────────────────────────────────────
+        realizadas = Consulta.objects.filter(status='realizada')
+        ctx['receita_total'] = realizadas.aggregate(t=Sum('valor_final'))['t'] or 0
+        ctx['receita_prevista'] = Consulta.objects.filter(
+            status='agendada'
+        ).aggregate(t=Sum('valor_final'))['t'] or 0
+        ctx['receita_mes'] = realizadas.filter(
+            data_consulta__month=hoje.month, data_consulta__year=hoje.year,
+        ).aggregate(t=Sum('valor_final'))['t'] or 0
+
+        # Receita por médico
+        ctx['receita_por_medico'] = realizadas.values(
+            'medico__usuario__first_name', 'medico__usuario__last_name',
+        ).annotate(
+            total=Sum('valor_final'), qtd=Count('id'),
+        ).order_by('-total')
+
+        # Receita por especialidade
+        ctx['receita_por_especialidade'] = realizadas.values(
+            'medico__especialidade',
+        ).annotate(
+            total=Sum('valor_final'), qtd=Count('id'),
+        ).order_by('-total')
+
         return ctx
 
 
