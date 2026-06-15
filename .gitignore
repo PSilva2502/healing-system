@@ -45,3 +45,7 @@ desktop.ini
 
 # Migrations (manter estrutura mas pode comentar se quiser versionar)
 # healing/*/migrations/0*.py
+
+# Skills / tooling
+.agents/
+skills-lock.json

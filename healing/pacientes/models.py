@@ -1,14 +1,32 @@
 from django.db import models
 
 
+class Convenio(models.Model):
+    nome               = models.CharField(max_length=100, verbose_name='Nome do Convênio')
+    desconto_percentual = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                            verbose_name='Desconto (%)')
+    ativo              = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'convenio'
+        verbose_name = 'Convênio'
+        verbose_name_plural = 'Convênios'
+        ordering = ['nome']
+
+    def __str__(self):
+        return f'{self.nome} ({self.desconto_percentual}%)'
+
+
 class Paciente(models.Model):
-    nome = models.CharField(max_length=100)
-    sobrenome = models.CharField(max_length=100, blank=True, default='')
-    email = models.EmailField(blank=True, default='')
-    cpf = models.CharField(max_length=11, unique=True)
-    telefone = models.CharField(max_length=15)
+    nome            = models.CharField(max_length=100)
+    sobrenome       = models.CharField(max_length=100, blank=True, default='')
+    email           = models.EmailField(blank=True, default='')
+    cpf             = models.CharField(max_length=11, unique=True)
+    telefone        = models.CharField(max_length=15)
     data_nascimento = models.DateField()
-    ativo = models.BooleanField(default=True)
+    convenio        = models.ForeignKey(Convenio, null=True, blank=True,
+                        on_delete=models.SET_NULL, verbose_name='Convênio')
+    ativo           = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'paciente'

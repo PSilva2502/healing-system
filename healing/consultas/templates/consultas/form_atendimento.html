@@ -1,4 +1,4 @@
-{% extends 'core/base.html' %}
+﻿{% extends 'core/base.html' %}
 {% load healing_tags static %}
 
 {% block titulo %}Registrar Atendimento{% endblock %}
@@ -59,14 +59,14 @@
   transform: scale(1.15);
 }
 .pulse-dot.selected {
-  fill: rgba(196,98,45,0.55);
-  stroke: #C4622D;
+  fill: rgba(37, 99, 235,0.55);
+  stroke: #2563EB;
   stroke-width: 8;
   animation: pulseBeat3D 1.8s ease-in-out infinite alternate;
 }
 @keyframes pulseBeat3D {
-  0%   { stroke-width: 6;  filter: drop-shadow(0 0 8px rgba(196,98,45,0.6)); }
-  100% { stroke-width: 12; filter: drop-shadow(0 0 20px rgba(196,98,45,0.9)); }
+  0%   { stroke-width: 6;  filter: drop-shadow(0 0 8px rgba(37, 99, 235,0.6)); }
+  100% { stroke-width: 12; filter: drop-shadow(0 0 20px rgba(37, 99, 235,0.9)); }
 }
 
 /* Glass Scan Line */
@@ -144,7 +144,7 @@
   font-weight: 600;
   background: var(--accent-soft);
   color: var(--accent);
-  border: 1px solid rgba(196,98,45,0.22);
+  border: 1px solid rgba(37, 99, 235,0.22);
   font-family: var(--font-display);
 }
 .zone-pill-dot {
@@ -162,7 +162,7 @@
   padding: 12px 14px;
   border-radius: var(--r-md);
   background: var(--accent-soft);
-  border: 1px solid rgba(196,98,45,0.18);
+  border: 1px solid rgba(37, 99, 235,0.18);
 }
 .exam-banner-text {
   font-size: 0.76rem;
@@ -291,9 +291,9 @@
       <svg id="bodySvg" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="scanGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stop-color="#C4622D" stop-opacity="0"   />
-            <stop offset="50%"  stop-color="#C4622D" stop-opacity="0.35"/>
-            <stop offset="100%" stop-color="#C4622D" stop-opacity="0"   />
+            <stop offset="0%"   stop-color="#2563EB" stop-opacity="0"   />
+            <stop offset="50%"  stop-color="#2563EB" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#2563EB" stop-opacity="0"   />
           </linearGradient>
         </defs>
 
@@ -362,6 +362,24 @@
 
       </div>
     </div>
+
+    {% if campos_extras %}
+    <!-- Template Clínico por tipo de consulta -->
+    <div class="bento-card reveal d-4" style="padding:22px 24px;margin-bottom:18px;">
+      <div class="bodymap-section-title">
+        {{ consulta.tipo_consulta.nome }} — Avaliação Específica
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+        {% for campo in campos_extras %}
+        <div class="form-group">
+          <label class="form-label">{{ campo.label }}</label>
+          <input type="{{ campo.tipo|default:'text' }}" name="extra_{{ forloop.counter0 }}"
+                 class="form-input" placeholder="{{ campo.label }}">
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
 
     <!-- Anamnese + Diagnóstico -->
     <div class="clinical-grid">

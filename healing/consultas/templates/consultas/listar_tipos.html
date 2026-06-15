@@ -1,0 +1,47 @@
+{% extends 'core/base.html' %}
+{% block titulo %}Tipos de Consulta{% endblock %}
+
+{% block conteudo %}
+<div style="max-width:1000px;margin:0 auto;">
+  <div class="futuristic-header reveal d-1" style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="f-title">Tipos de Consulta &amp; Valores</div>
+    <a href="{% url 'criar_tipo_consulta' %}" class="btn-primary">+ Novo Tipo</a>
+  </div>
+
+  <div class="bento-card reveal" style="padding:0;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);">
+          <th style="padding:14px 20px;">Tipo</th>
+          <th style="padding:14px 20px;">Especialidade</th>
+          <th style="padding:14px 20px;">Valor Base</th>
+          <th style="padding:14px 20px;">Campos</th>
+          <th style="padding:14px 20px;">Status</th>
+          <th style="padding:14px 20px;text-align:right;">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tipos %}
+        <tr style="border-top:1px solid var(--border);font-size:0.9rem;">
+          <td style="padding:14px 20px;font-weight:600;">{{ t.nome }}</td>
+          <td style="padding:14px 20px;color:var(--text-secondary);">{{ t.especialidade|default:'—' }}</td>
+          <td style="padding:14px 20px;color:var(--accent);font-weight:700;">
+            {% if t.tabela_valor %}R$ {{ t.tabela_valor.valor_base }}{% else %}—{% endif %}
+          </td>
+          <td style="padding:14px 20px;color:var(--text-muted);">{{ t.campos_extras|length }} campo{{ t.campos_extras|length|pluralize }}</td>
+          <td style="padding:14px 20px;">
+            {% if t.ativo %}<span style="color:var(--success);">● Ativo</span>
+            {% else %}<span style="color:var(--text-muted);">○ Inativo</span>{% endif %}
+          </td>
+          <td style="padding:14px 20px;text-align:right;">
+            <a href="{% url 'editar_tipo_consulta' t.pk %}" class="btn-secondary" style="padding:6px 14px;font-size:0.8rem;">Editar</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="padding:30px;text-align:center;color:var(--text-muted);">Nenhum tipo cadastrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

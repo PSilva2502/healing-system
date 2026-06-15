@@ -63,6 +63,13 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label class="form-label">Convênio</label>
+        {{ form.convenio }}
+        <div style="font-size:0.72rem;color:var(--text-faint);margin-top:4px;">Deixe em branco para paciente particular</div>
+        {% if form.convenio.errors %}<div class="form-error">{{ form.convenio.errors.0 }}</div>{% endif %}
+      </div>
+
       {% if form.non_field_errors %}
       <div class="form-error" style="margin-bottom:16px;">{{ form.non_field_errors.0 }}</div>
       {% endif %}

@@ -41,6 +41,20 @@
         {% if form.medico.errors %}<div class="form-error">{{ form.medico.errors.0 }}</div>{% endif %}
       </div>
 
+      <div class="form-group">
+        <label class="form-label">Tipo de Consulta</label>
+        <select name="tipo_consulta" class="form-select">
+          <option value="">Selecione o tipo</option>
+          {% for t in form.fields.tipo_consulta.queryset %}
+          <option value="{{ t.pk }}" {% if form.tipo_consulta.value == t.pk|stringformat:"s" %}selected{% endif %}>
+            {{ t.nome }}{% if t.tabela_valor %} — R$ {{ t.tabela_valor.valor_base }}{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+        <div style="font-size:0.72rem;color:var(--text-faint);margin-top:4px;">O valor é calculado automaticamente (tabela − desconto do convênio)</div>
+        {% if form.tipo_consulta.errors %}<div class="form-error">{{ form.tipo_consulta.errors.0 }}</div>{% endif %}
+      </div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
           <label class="form-label">Data da Consulta</label>

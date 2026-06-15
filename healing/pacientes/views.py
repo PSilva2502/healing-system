@@ -6,8 +6,61 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from core.decorators import exige_perfil
 from core.auditoria import registrar_auditoria
-from pacientes.models import Paciente
-from pacientes.forms import FormularioPaciente
+from pacientes.models import Paciente, Convenio
+from pacientes.forms import FormularioPaciente, FormularioConvenio
+
+
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class ListarConveniosView(LoginRequiredMixin, TemplateView):
+    template_name = 'pacientes/listar_convenios.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['convenios'] = Convenio.objects.all().order_by('nome')
+        return ctx
+
+
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class CriarConvenioView(LoginRequiredMixin, View):
+    template_name = 'pacientes/form_convenio.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {
+            'form': FormularioConvenio(), 'titulo': 'Novo Convênio',
+        })
+
+    def post(self, request):
+        form = FormularioConvenio(request.POST)
+        if form.is_valid():
+            form.save()
+            registrar_auditoria('convenio', 'INSERT')
+            messages.success(request, 'Convênio cadastrado com sucesso!')
+            return redirect('listar_convenios')
+        return render(request, self.template_name, {'form': form, 'titulo': 'Novo Convênio'})
+
+
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class EditarConvenioView(LoginRequiredMixin, View):
+    template_name = 'pacientes/form_convenio.html'
+
+    def get(self, request, pk):
+        convenio = get_object_or_404(Convenio, pk=pk)
+        return render(request, self.template_name, {
+            'form': FormularioConvenio(instance=convenio),
+            'convenio': convenio, 'titulo': 'Editar Convênio',
+        })
+
+    def post(self, request, pk):
+        convenio = get_object_or_404(Convenio, pk=pk)
+        form = FormularioConvenio(request.POST, instance=convenio)
+        if form.is_valid():
+            form.save()
+            registrar_auditoria('convenio', 'UPDATE')
+            messages.success(request, 'Convênio atualizado com sucesso!')
+            return redirect('listar_convenios')
+        return render(request, self.template_name, {
+            'form': form, 'convenio': convenio, 'titulo': 'Editar Convênio',
+        })
 
 
 @method_decorator(exige_perfil('admin', 'medico', 'recepcionista'), name='dispatch')

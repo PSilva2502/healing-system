@@ -1,0 +1,41 @@
+{% extends 'core/base.html' %}
+{% block titulo %}Convênios{% endblock %}
+
+{% block conteudo %}
+<div style="max-width:900px;margin:0 auto;">
+  <div class="futuristic-header reveal d-1" style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="f-title">Convênios</div>
+    <a href="{% url 'criar_convenio' %}" class="btn-primary">+ Novo Convênio</a>
+  </div>
+
+  <div class="bento-card reveal" style="padding:0;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);">
+          <th style="padding:14px 20px;">Nome</th>
+          <th style="padding:14px 20px;">Desconto</th>
+          <th style="padding:14px 20px;">Status</th>
+          <th style="padding:14px 20px;text-align:right;">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in convenios %}
+        <tr style="border-top:1px solid var(--border);font-size:0.9rem;">
+          <td style="padding:14px 20px;font-weight:600;">{{ c.nome }}</td>
+          <td style="padding:14px 20px;color:var(--accent);font-weight:700;">{{ c.desconto_percentual }}%</td>
+          <td style="padding:14px 20px;">
+            {% if c.ativo %}<span style="color:var(--success);">● Ativo</span>
+            {% else %}<span style="color:var(--text-muted);">○ Inativo</span>{% endif %}
+          </td>
+          <td style="padding:14px 20px;text-align:right;">
+            <a href="{% url 'editar_convenio' c.pk %}" class="btn-secondary" style="padding:6px 14px;font-size:0.8rem;">Editar</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="padding:30px;text-align:center;color:var(--text-muted);">Nenhum convênio cadastrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

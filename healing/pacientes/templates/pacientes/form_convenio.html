@@ -1,0 +1,40 @@
+{% extends 'core/base.html' %}
+{% block titulo %}{{ titulo }}{% endblock %}
+
+{% block conteudo %}
+<div style="max-width:520px;margin:0 auto;">
+  <div class="futuristic-header reveal d-1">
+    <div class="f-title">{{ titulo }}</div>
+    <a href="{% url 'listar_convenios' %}" class="btn-secondary">← Voltar</a>
+  </div>
+
+  <div class="bento-card reveal" style="padding:32px;">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label">Nome do Convênio</label>
+        {{ form.nome }}
+        {% if form.nome.errors %}<div class="form-error">{{ form.nome.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Desconto (%)</label>
+        {{ form.desconto_percentual }}
+        <div style="font-size:0.72rem;color:var(--text-faint);margin-top:4px;">Percentual aplicado sobre o valor base da consulta</div>
+        {% if form.desconto_percentual.errors %}<div class="form-error">{{ form.desconto_percentual.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+        {{ form.ativo }}
+        <label class="form-label" style="margin:0;">Convênio ativo</label>
+      </div>
+
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px;">
+        <a href="{% url 'listar_convenios' %}" class="btn-secondary">Cancelar</a>
+        <button type="submit" class="btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

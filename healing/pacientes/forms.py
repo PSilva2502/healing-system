@@ -1,11 +1,26 @@
 from django import forms
-from pacientes.models import Paciente
+from pacientes.models import Paciente, Convenio
+
+
+class FormularioConvenio(forms.ModelForm):
+    class Meta:
+        model = Convenio
+        fields = ['nome', 'desconto_percentual', 'ativo']
+        labels = {
+            'nome': 'Nome do Convênio',
+            'desconto_percentual': 'Desconto (%)',
+            'ativo': 'Ativo',
+        }
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Ex: Unimed'}),
+            'desconto_percentual': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01', 'min': '0', 'max': '100'}),
+        }
 
 
 class FormularioPaciente(forms.ModelForm):
     class Meta:
         model = Paciente
-        fields = ['nome', 'sobrenome', 'email', 'cpf', 'telefone', 'data_nascimento']
+        fields = ['nome', 'sobrenome', 'email', 'cpf', 'telefone', 'data_nascimento', 'convenio']
         labels = {
             'nome': 'Nome',
             'sobrenome': 'Sobrenome',
@@ -13,6 +28,7 @@ class FormularioPaciente(forms.ModelForm):
             'cpf': 'CPF',
             'telefone': 'Telefone',
             'data_nascimento': 'Data de Nascimento',
+            'convenio': 'Convênio',
         }
         widgets = {
             'data_nascimento': forms.DateInput(attrs={'type': 'date'}),
@@ -20,6 +36,14 @@ class FormularioPaciente(forms.ModelForm):
             'telefone': forms.TextInput(attrs={'placeholder': '(00) 00000-0000'}),
             'email': forms.EmailInput(attrs={'placeholder': 'paciente@email.com'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from pacientes.models import Convenio
+        self.fields['convenio'].queryset = Convenio.objects.filter(ativo=True)
+        self.fields['convenio'].empty_label = 'Particular (sem convênio)'
+        self.fields['convenio'].required = False
+        self.fields['convenio'].widget.attrs['class'] = 'form-input'
 
     def clean_cpf(self):
         cpf = self.cleaned_data.get('cpf', '').strip().replace('.', '').replace('-', '')

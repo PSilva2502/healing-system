@@ -1,4 +1,4 @@
-{% extends 'core/base.html' %}
+﻿{% extends 'core/base.html' %}
 {% load healing_tags %}
 
 {% block titulo %}Médicos{% endblock %}
@@ -47,7 +47,7 @@
   <div class="bento-card reveal glass-card-cyan" style="padding:24px;">
     <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;">
       {% if medico.foto %}
-      <img src="{{ medico.foto.url }}" alt="Foto" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:2px solid rgba(196,98,45,0.25);">
+      <img src="{{ medico.foto.url }}" alt="Foto" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:2px solid rgba(37, 99, 235,0.25);">
       {% else %}
       <div class="user-avatar" style="width:52px;height:52px;font-size:1.1rem;border-radius:12px;">
         {{ medico.usuario.first_name|slice:":1"|upper }}{{ medico.usuario.last_name|slice:":1"|upper }}

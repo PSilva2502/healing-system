@@ -1,28 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
 :root {
-  /* ── Paleta: Terracota Clínica ──────────── */
-  --bg-base:      #F7F3EF;
-  --bg-gradient-1: radial-gradient(at 0% 0%,   hsla(30,  70%, 91%, 1) 0, transparent 55%);
-  --bg-gradient-2: radial-gradient(at 100% 0%,  hsla(16,  60%, 90%, 1) 0, transparent 55%);
-  --bg-gradient-3: radial-gradient(at 100% 100%,hsla(45,  55%, 93%, 1) 0, transparent 55%);
-  --bg-gradient-4: radial-gradient(at 0% 100%,  hsla(22,  50%, 90%, 1) 0, transparent 55%);
+  /* ── Paleta: Azul + Branco Clínico ─────── */
+  --bg-base:      #F0F5FF;
+  --bg-gradient-1: radial-gradient(at 0% 0%,   hsla(217, 100%, 95%, 1) 0, transparent 55%);
+  --bg-gradient-2: radial-gradient(at 100% 0%,  hsla(210, 100%, 96%, 1) 0, transparent 55%);
+  --bg-gradient-3: radial-gradient(at 100% 100%,hsla(220, 100%, 97%, 1) 0, transparent 55%);
+  --bg-gradient-4: radial-gradient(at 0% 100%,  hsla(213, 100%, 95%, 1) 0, transparent 55%);
 
-  --surface:       rgba(255, 255, 255, 0.65);
-  --surface-hover: rgba(255, 255, 255, 0.85);
+  --surface:       rgba(255, 255, 255, 0.80);
+  --surface-hover: rgba(255, 255, 255, 0.95);
   --surface-solid: #ffffff;
 
-  --border:        rgba(255, 255, 255, 0.45);
-  --border-strong: rgba(0, 0, 0, 0.07);
+  --border:        rgba(255, 255, 255, 0.60);
+  --border-strong: rgba(37, 99, 235, 0.10);
 
-  --text-primary:   #1A1009;
-  --text-secondary: #4A3020;
-  --text-muted:     #8C6E58;
+  --text-primary:   #0F172A;
+  --text-secondary: #1E3A5F;
+  --text-muted:     #64748B;
 
-  /* ── Accent — terracota ─────────────────── */
-  --accent:      #C4622D;
-  --accent-soft: rgba(196, 98, 45, 0.10);
-  --accent-hover:#A84F21;
+  /* ── Accent — azul ──────────────────────── */
+  --accent:      #2563EB;
+  --accent-soft: rgba(37, 99, 235, 0.10);
+  --accent-hover:#1D4ED8;
 
   /* ── Semânticos ─────────────────────────── */
   --success:    #059669;
@@ -37,8 +37,8 @@
   --font-sans:    'Inter', sans-serif;
 
   /* ── Efeitos ────────────────────────────── */
-  --shadow-float: 0 10px 40px -10px rgba(80, 30, 10, 0.10);
-  --shadow-sm:    0 4px 12px rgba(80, 30, 10, 0.05);
+  --shadow-float: 0 10px 40px -10px rgba(37, 99, 235, 0.12);
+  --shadow-sm:    0 4px 12px rgba(37, 99, 235, 0.06);
   --blur:         blur(24px);
   --blur-heavy:   blur(40px);
 
@@ -52,34 +52,6 @@
   /* ── Transições ─────────────────────────── */
   --t-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   --t-fast:   0.2s ease-out;
-}
-
-/* ── Dark mode ───────────────────────────── */
-body.dark {
-  --bg-base:       #100C08;
-  --bg-gradient-1: radial-gradient(at 0% 0%,   hsla(20, 60%, 10%, 1) 0, transparent 55%);
-  --bg-gradient-2: radial-gradient(at 100% 0%,  hsla(15, 50%, 8%,  1) 0, transparent 55%);
-  --bg-gradient-3: radial-gradient(at 100% 100%,hsla(30, 40%, 10%, 1) 0, transparent 55%);
-  --bg-gradient-4: radial-gradient(at 0% 100%,  hsla(10, 40%, 8%,  1) 0, transparent 55%);
-
-  --surface:       rgba(32, 22, 14, 0.70);
-  --surface-hover: rgba(44, 30, 18, 0.85);
-  --surface-solid: #1E1410;
-
-  --border:        rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.10);
-
-  --text-primary:   #F5EDE4;
-  --text-secondary: #C4A68C;
-  --text-muted:     #7A5C46;
-
-  --accent:      #E08558;
-  --accent-soft: rgba(224, 133, 88, 0.14);
-  --accent-hover:#CC6E3E;
-
-  --success-bg: rgba(5, 150, 105, 0.14);
-  --warning-bg: rgba(217, 119, 6, 0.14);
-  --danger-bg:  rgba(220, 38, 38, 0.14);
 }
 
 /* ── Reset ──────────────────────────────── */
@@ -254,10 +226,10 @@ body.dark .btn-primary { background: var(--text-primary); color: var(--bg-base);
   margin-left: 4px;
   margin-right: 4px;
   text-decoration: none;
-  border: 1px solid rgba(196, 98, 45, 0.25);
+  border: 1px solid rgba(37, 99, 235, 0.25);
   flex-shrink: 0;
 }
-body.dark .nav-profile { border-color: rgba(224, 133, 88, 0.30); }
+body.dark .nav-profile { border-color: rgba(59, 130, 246, 0.30); }
 
 /* ── Layout principal ───────────────────── */
 .app-main {
@@ -431,7 +403,7 @@ body.dark .f-list-row:hover { background: rgba(255,255,255,0.04); }
   --bg:            var(--bg-base);
   --text-faint:    rgba(140, 110, 88, 0.40);
   --border-l:      rgba(0, 0, 0, 0.05);
-  --accent-border: rgba(196, 98, 45, 0.28);
+  --accent-border: rgba(37, 99, 235, 0.28);
   --accent-deep:   #7B3D18;
   --surface-warm:  var(--surface);
   --n-50:          rgba(247, 243, 239, 0.80);
@@ -493,7 +465,7 @@ body.dark {
   background: var(--surface);
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
-  border: 1px solid rgba(196, 98, 45, 0.15);
+  border: 1px solid rgba(37, 99, 235, 0.15);
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-sm);
   position: relative;
@@ -538,7 +510,7 @@ body.dark .data-table tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
   font-family: var(--font-display);
   font-weight: 700;
   flex-shrink: 0;
-  border: 1px solid rgba(196, 98, 45, 0.18);
+  border: 1px solid rgba(37, 99, 235, 0.18);
   width: 36px;
   height: 36px;
   font-size: 0.80rem;
@@ -623,5 +595,5 @@ body.dark .data-table tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
 
 /* ── Profile badges ─────────────────────── */
 .badge-admin        { background: rgba(124,58,237,0.10); color: #7C3AED; border: 1px solid rgba(124,58,237,0.20); }
-.badge-medico       { background: var(--accent-soft);    color: var(--accent); border: 1px solid rgba(196,98,45,0.20); }
+.badge-medico       { background: var(--accent-soft);    color: var(--accent); border: 1px solid rgba(37, 99, 235,0.20); }
 .badge-recepcionista{ background: var(--info-bg);         color: var(--info);   border: 1px solid var(--info-bd); }

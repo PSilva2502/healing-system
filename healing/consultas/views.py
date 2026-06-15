@@ -8,11 +8,76 @@ from django.utils.decorators import method_decorator
 from django.core.exceptions import PermissionDenied
 from core.decorators import exige_perfil
 from core.auditoria import registrar_auditoria
-from consultas.models import Consulta, Atendimento
+from consultas.models import Consulta, Atendimento, TipoConsulta, TabelaValor
 from consultas.forms import (
     FormularioAgendamento, FormularioAgendamentoAdmin, FormularioAtendimento,
-    FormularioEdicaoConsulta,
+    FormularioEdicaoConsulta, FormularioTipoConsulta,
 )
+
+
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class ListarTiposConsultaView(LoginRequiredMixin, TemplateView):
+    template_name = 'consultas/listar_tipos.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['tipos'] = TipoConsulta.objects.all().order_by('nome')
+        return ctx
+
+
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class CriarTipoConsultaView(LoginRequiredMixin, View):
+    template_name = 'consultas/form_tipo.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {
+            'form': FormularioTipoConsulta(), 'titulo': 'Novo Tipo de Consulta',
+        })
+
+    def post(self, request):
+        form = FormularioTipoConsulta(request.POST)
+        if form.is_valid():
+            tipo = form.save(commit=False)
+            tipo.campos_extras = form.campos_lista()
+            tipo.save()
+            TabelaValor.objects.update_or_create(
+                tipo_consulta=tipo,
+                defaults={'valor_base': form.cleaned_data['valor_base']},
+            )
+            registrar_auditoria('tipo_consulta', 'INSERT')
+            messages.success(request, 'Tipo de consulta criado com sucesso!')
+            return redirect('listar_tipos_consulta')
+        return render(request, self.template_name, {'form': form, 'titulo': 'Novo Tipo de Consulta'})
+
+
+@method_decorator(exige_perfil('admin'), name='dispatch')
+class EditarTipoConsultaView(LoginRequiredMixin, View):
+    template_name = 'consultas/form_tipo.html'
+
+    def get(self, request, pk):
+        tipo = get_object_or_404(TipoConsulta, pk=pk)
+        return render(request, self.template_name, {
+            'form': FormularioTipoConsulta(instance=tipo),
+            'tipo': tipo, 'titulo': 'Editar Tipo de Consulta',
+        })
+
+    def post(self, request, pk):
+        tipo = get_object_or_404(TipoConsulta, pk=pk)
+        form = FormularioTipoConsulta(request.POST, instance=tipo)
+        if form.is_valid():
+            tipo = form.save(commit=False)
+            tipo.campos_extras = form.campos_lista()
+            tipo.save()
+            TabelaValor.objects.update_or_create(
+                tipo_consulta=tipo,
+                defaults={'valor_base': form.cleaned_data['valor_base']},
+            )
+            registrar_auditoria('tipo_consulta', 'UPDATE')
+            messages.success(request, 'Tipo de consulta atualizado com sucesso!')
+            return redirect('listar_tipos_consulta')
+        return render(request, self.template_name, {
+            'form': form, 'tipo': tipo, 'titulo': 'Editar Tipo de Consulta',
+        })
 
 
 class ListarConsultasView(LoginRequiredMixin, TemplateView):
@@ -79,7 +144,9 @@ class AgendarConsultaView(LoginRequiredMixin, View):
             return redirect('painel')
 
         if form.is_valid():
-            consulta = form.save()
+            consulta = form.save(commit=False)
+            consulta.valor_final = consulta.calcular_valor()
+            consulta.save()
             registrar_auditoria('consulta', 'INSERT')
             messages.success(request, 'Consulta agendada com sucesso!')
             return redirect('listar_consultas')
@@ -117,7 +184,15 @@ class RegistrarAtendimentoView(LoginRequiredMixin, View):
         if hasattr(consulta, 'atendimento'):
             return redirect('detalhar_atendimento', pk=consulta.pk)
         form = FormularioAtendimento()
-        return render(request, self.template_name, {'form': form, 'consulta': consulta})
+        return render(request, self.template_name, {
+            'form': form, 'consulta': consulta,
+            'campos_extras': self._campos_extras(consulta),
+        })
+
+    def _campos_extras(self, consulta):
+        if consulta.tipo_consulta:
+            return consulta.tipo_consulta.campos_extras or []
+        return []
 
     def post(self, request, pk):
         consulta = get_object_or_404(Consulta, pk=pk)
@@ -128,13 +203,23 @@ class RegistrarAtendimentoView(LoginRequiredMixin, View):
             atendimento = form.save(commit=False)
             atendimento.consulta = consulta
             atendimento.save()
+            # Campos do template clínico → dados_extras na consulta
+            campos = self._campos_extras(consulta)
+            dados = {}
+            for i, campo in enumerate(campos):
+                label = campo.get('label', f'campo_{i}')
+                dados[label] = request.POST.get(f'extra_{i}', '').strip()
+            consulta.dados_extras = dados
             consulta.status = 'realizada'
             consulta.save()
             registrar_auditoria('atendimento', 'INSERT')
             registrar_auditoria('consulta', 'UPDATE', {'status': 'agendada'})
             messages.success(request, 'Atendimento registrado com sucesso!')
             return redirect('detalhar_atendimento', pk=consulta.pk)
-        return render(request, self.template_name, {'form': form, 'consulta': consulta})
+        return render(request, self.template_name, {
+            'form': form, 'consulta': consulta,
+            'campos_extras': self._campos_extras(consulta),
+        })
 
 
 class DetalharAtendimentoView(LoginRequiredMixin, View):
@@ -184,7 +269,9 @@ class EditarConsultaView(LoginRequiredMixin, View):
         }
         form = FormularioEdicaoConsulta(request.POST, instance=consulta)
         if form.is_valid():
-            form.save()
+            consulta = form.save(commit=False)
+            consulta.valor_final = consulta.calcular_valor()
+            consulta.save()
             registrar_auditoria('consulta', 'UPDATE', dados_anteriores)
             messages.success(request, 'Consulta atualizada com sucesso!')
             return redirect('listar_consultas')

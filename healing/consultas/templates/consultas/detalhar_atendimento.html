@@ -1,4 +1,4 @@
-{% extends 'core/base.html' %}
+﻿{% extends 'core/base.html' %}
 {% load healing_tags static %}
 
 {% block titulo %}Consulta — {{ consulta.paciente.nome_completo }}{% endblock %}
@@ -45,14 +45,14 @@
   pointer-events: none;
 }
 .pulse-dot.selected {
-  fill: rgba(196,98,45,0.55);
-  stroke: #C4622D;
+  fill: rgba(37, 99, 235,0.55);
+  stroke: #2563EB;
   stroke-width: 8;
   animation: pulseBeat3D 1.8s ease-in-out infinite alternate;
 }
 @keyframes pulseBeat3D {
-  0%   { stroke-width: 6;  filter: drop-shadow(0 0 8px rgba(196,98,45,0.6)); }
-  100% { stroke-width: 12; filter: drop-shadow(0 0 20px rgba(196,98,45,0.9)); }
+  0%   { stroke-width: 6;  filter: drop-shadow(0 0 8px rgba(37, 99, 235,0.6)); }
+  100% { stroke-width: 12; filter: drop-shadow(0 0 20px rgba(37, 99, 235,0.9)); }
 }
 
 .glass-scan {
@@ -109,7 +109,7 @@
   font-weight: 600;
   background: var(--accent-soft);
   color: var(--accent);
-  border: 1px solid rgba(196,98,45,0.22);
+  border: 1px solid rgba(37, 99, 235,0.22);
   font-family: var(--font-display);
 }
 .zone-pill-dot {
@@ -207,9 +207,9 @@
       <svg id="bodySvg" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="scanGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stop-color="#C4622D" stop-opacity="0"   />
-            <stop offset="50%"  stop-color="#C4622D" stop-opacity="0.35"/>
-            <stop offset="100%" stop-color="#C4622D" stop-opacity="0"   />
+            <stop offset="0%"   stop-color="#2563EB" stop-opacity="0"   />
+            <stop offset="50%"  stop-color="#2563EB" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#2563EB" stop-opacity="0"   />
           </linearGradient>
         </defs>
 
@@ -312,6 +312,40 @@
       {% endif %}
     </div>
   </div>
+
+  {% if consulta.dados_extras %}
+  <!-- Avaliação específica do tipo de consulta -->
+  <div class="bento-card reveal" style="padding:22px 24px;margin-bottom:16px;">
+    <div class="section-title">{{ consulta.tipo_consulta.nome }} — Avaliação Específica</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;">
+      {% for label, valor in consulta.dados_extras.items %}
+      <div>
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);">{{ label }}</div>
+        <div class="field-value" style="margin-top:2px;">{{ valor|default:'—' }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if consulta.tipo_consulta or consulta.valor_final %}
+  <!-- Informação financeira -->
+  <div class="bento-card reveal" style="padding:18px 24px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);">Tipo / Convênio</div>
+      <div class="field-value" style="margin-top:2px;">
+        {{ consulta.tipo_consulta.nome|default:'—' }}
+        · {{ consulta.paciente.convenio.nome|default:'Particular' }}
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);">Valor</div>
+      <div style="font-size:1.4rem;font-weight:700;color:var(--accent);font-family:var(--font-display);">
+        {% if consulta.valor_final %}R$ {{ consulta.valor_final }}{% else %}—{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
 </div>
 

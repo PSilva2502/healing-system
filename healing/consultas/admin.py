@@ -1,12 +1,24 @@
 from django.contrib import admin
-from consultas.models import Consulta, Atendimento
+from consultas.models import Consulta, Atendimento, TipoConsulta, TabelaValor
+
+
+@admin.register(TipoConsulta)
+class TipoConsultaAdmin(admin.ModelAdmin):
+    list_display = ['nome', 'especialidade', 'ativo']
+    list_filter = ['ativo', 'especialidade']
+    search_fields = ['nome', 'especialidade']
+
+
+@admin.register(TabelaValor)
+class TabelaValorAdmin(admin.ModelAdmin):
+    list_display = ['tipo_consulta', 'valor_base']
 
 
 @admin.register(Consulta)
 class ConsultaAdmin(admin.ModelAdmin):
-    list_display = ['paciente', 'medico', 'data_consulta', 'horario', 'status']
-    list_filter = ['status', 'data_consulta']
-    search_fields = ['paciente__usuario__first_name', 'medico__usuario__first_name']
+    list_display = ['paciente', 'medico', 'tipo_consulta', 'data_consulta', 'horario', 'status', 'valor_final']
+    list_filter = ['status', 'data_consulta', 'tipo_consulta']
+    search_fields = ['paciente__nome', 'medico__usuario__first_name']
 
 
 @admin.register(Atendimento)

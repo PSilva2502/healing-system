@@ -1,7 +1,7 @@
 import json
 from datetime import date
 from django import forms
-from consultas.models import Consulta, Atendimento
+from consultas.models import Consulta, Atendimento, TipoConsulta
 from medicos.models import Medico
 from pacientes.models import Paciente
 
@@ -20,9 +20,10 @@ class FormularioAgendamento(forms.ModelForm):
 
     class Meta:
         model = Consulta
-        fields = ['medico', 'data_consulta', 'horario', 'observacoes']
+        fields = ['medico', 'tipo_consulta', 'data_consulta', 'horario', 'observacoes']
         labels = {
             'medico': 'Médico',
+            'tipo_consulta': 'Tipo de Consulta',
             'data_consulta': 'Data da Consulta',
             'observacoes': 'Observações',
         }
@@ -40,6 +41,9 @@ class FormularioAgendamento(forms.ModelForm):
             qs = qs.filter(especialidade=especialidade)
         self.fields['medico'].queryset = qs
         self.fields['medico'].empty_label = 'Selecione um médico'
+        self.fields['tipo_consulta'].queryset = TipoConsulta.objects.filter(ativo=True)
+        self.fields['tipo_consulta'].empty_label = 'Selecione o tipo'
+        self.fields['tipo_consulta'].required = False
 
     def clean_data_consulta(self):
         data = self.cleaned_data.get('data_consulta')
@@ -68,7 +72,7 @@ class FormularioAgendamento(forms.ModelForm):
 
 class FormularioAgendamentoAdmin(FormularioAgendamento):
     class Meta(FormularioAgendamento.Meta):
-        fields = ['paciente', 'medico', 'data_consulta', 'horario', 'observacoes']
+        fields = ['paciente', 'medico', 'tipo_consulta', 'data_consulta', 'horario', 'observacoes']
         labels = {
             **FormularioAgendamento.Meta.labels,
             'paciente': 'Paciente',
@@ -120,3 +124,45 @@ class FormularioEdicaoConsulta(FormularioAgendamentoAdmin):
 
     def clean_data_consulta(self):
         return self.cleaned_data.get('data_consulta')
+
+
+class FormularioTipoConsulta(forms.ModelForm):
+    valor_base = forms.DecimalField(
+        label='Valor Base (R$)', max_digits=8, decimal_places=2, min_value=0,
+        widget=forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01', 'placeholder': '0.00'}),
+    )
+    campos = forms.CharField(
+        label='Campos do Prontuário (um por linha)', required=False,
+        widget=forms.Textarea(attrs={'class': 'form-textarea', 'rows': 6,
+            'placeholder': 'Pressão Arterial\nFrequência Cardíaca\nResultado ECG\nAusculta'}),
+        help_text='Cada linha vira um campo no formulário de atendimento deste tipo.',
+    )
+
+    class Meta:
+        model = TipoConsulta
+        fields = ['nome', 'especialidade', 'ativo']
+        labels = {
+            'nome': 'Nome do Tipo',
+            'especialidade': 'Especialidade',
+            'ativo': 'Ativo',
+        }
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Ex: Avaliação Cardiológica'}),
+            'especialidade': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Ex: Cardiologia'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        inst = self.instance
+        if inst and inst.pk:
+            if hasattr(inst, 'tabela_valor'):
+                self.fields['valor_base'].initial = inst.tabela_valor.valor_base
+            if inst.campos_extras:
+                self.fields['campos'].initial = '\n'.join(
+                    c.get('label', '') for c in inst.campos_extras
+                )
+
+    def campos_lista(self):
+        raw = self.cleaned_data.get('campos', '') or ''
+        labels = [l.strip() for l in raw.splitlines() if l.strip()]
+        return [{'label': l, 'tipo': 'text'} for l in labels]
